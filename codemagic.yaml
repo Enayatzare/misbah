@@ -9,7 +9,7 @@ workflows:
           pip3 install -r requirements.txt
       - name: Build APK
         script: |
-          flet build apk \
+          echo "y" | flet build apk \
             --org "com.masjid.ibrahim.misbah" \
             --project "Misbah" \
             --description "اپلیکیشن مصباح - مدیریت مسجد حضرت ابراهیم(ع)" \
