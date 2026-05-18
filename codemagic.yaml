@@ -14,7 +14,6 @@ workflows:
             --project "Misbah" \
             --description "اپلیکیشن مصباح - مدیریت مسجد حضرت ابراهیم(ع)" \
             --product "مصباح" \
-            --icon "assets/icons/icon-512.png" \
-            --build-number 2
+            --build-number 3
     artifacts:
       - build/apk/**/*.apk
