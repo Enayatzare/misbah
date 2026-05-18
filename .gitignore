@@ -1,0 +1,18 @@
+# پوشه‌های بیلد و موقت Flet/Flutter
+build/
+__pycache__/
+*.pyc
+.flet/
+
+# فایل‌های سیستم عامل
+.DS_Store
+Thumbs.db
+
+# محیط مجازی پایتون
+venv/
+.venv/
+
+# فایل‌های محیطی و حساس
+.env
+*.keystore
+*.jks
