@@ -1,0 +1,19 @@
+workflows:
+  build-android:
+    name: Build Android APK
+    environment:
+      flutter: 3.41.4
+    scripts:
+      - name: Install dependencies
+        script: |
+          pip3 install -r requirements.txt
+      - name: Build APK
+        script: |
+          flet build apk \
+            --org "com.masjid.ibrahim.misbah" \
+            --project "Misbah" \
+            --description "اپلیکیشن مصباح - مدیریت مسجد حضرت ابراهیم(ع)" \
+            --product "مصباح" \
+            --build-number 1
+    artifacts:
+      - build/apk/**/*.apk
