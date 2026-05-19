@@ -56,7 +56,7 @@ class DeceasedPage:
                     [
                         ft.Icon(ft.icons.Icons.FLAG, size=28,
                                 color=AppTheme.SECONDARY),
-                        ft.Text("آگهی ترحیم", size=36, font_family="IranNastaliq",
+                        ft.Text("آگهی ترحیم", size=32, font_family="IranNastaliq",
                                 color=AppTheme.SECONDARY, text_align=ft.TextAlign.CENTER),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,

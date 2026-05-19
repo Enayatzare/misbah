@@ -84,7 +84,7 @@ class PrayerPage:
             [
                 ft.Icon(ft.icons.Icons.NIGHTLIGHT_ROUND,
                         size=26, color=AppTheme.SECONDARY),
-                ft.Text("اوقات شرعی امروز", size=36, font_family="IranNastaliq",
+                ft.Text("اوقات شرعی امروز", size=32, font_family="IranNastaliq",
                         color=AppTheme.SECONDARY, text_align=ft.TextAlign.CENTER),
             ],
             alignment=ft.MainAxisAlignment.CENTER,

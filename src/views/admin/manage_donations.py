@@ -1,6 +1,6 @@
 # ==========================================
 # 📁 فایل: src/views/admin/manage_donations.py
-# (نسخه اصلاح شده - رفع خطای NoneType)
+# (نسخه اصلاح شده - دیالوگ‌های اسکرول‌دار + رفع مشکل آپدیت)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -324,31 +324,65 @@ class ManageDonations:
             "description", "") if plan else "", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
+        # ایجاد محتوای اسکرول‌دار با ListView
+        scrollable_content = ft.ListView(
+            controls=[
+                title_field,
+                ft.Container(height=10),
+                target_field,
+                ft.Container(height=10),
+                desc_field,
+                ft.Container(height=10),
+                msg,
+            ],
+            height=350,
+            spacing=0,
+        )
+
         def save(e):
             if not title_field.value:
                 msg.value = "عنوان الزامی است"
                 self.page.update()
                 return
-            data = {"title": title_field.value, "description": desc_field.value,
-                    "target_amount": target_field.value if target_field.value else None}
+
+            data = {
+                "title": title_field.value,
+                "description": desc_field.value,
+                "target_amount": target_field.value if target_field.value else None
+            }
+
             if is_edit:
                 data["id"] = plan.get("id")
-            result = api.post("admin/financial/plans_crud.php", data)
-            if result.get("message"):
+                result = api.put("admin/financial/plans_crud.php", data)
+            else:
+                result = api.post("admin/financial/plans_crud.php", data)
+
+            if result.get("message") or result.get("success"):
                 dlg.open = False
                 self.page.update()
                 self._show_success(
                     "طرح ویرایش شد" if is_edit else "طرح ایجاد شد")
                 self._reload()
             else:
-                msg.value = result.get("error", "خطا")
+                msg.value = result.get("error", "خطا در ذخیره طرح")
                 self.page.update()
 
-        def close(e): dlg.open = False; self.page.update()
-        dlg = ft.AlertDialog(title=ft.Text("ویرایش طرح" if is_edit else "افزودن طرح", font_family="Vazir", weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-                             content=ft.Column([title_field, ft.Container(height=10), target_field, ft.Container(
-                                 height=10), desc_field, ft.Container(height=8), msg], width=300),
-                             actions=[ft.TextButton("انصراف", on_click=close), ft.Button("ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))])
+        def close(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            title=ft.Text("ویرایش طرح" if is_edit else "افزودن طرح", font_family="Vazir",
+                          weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+            content=ft.Container(
+                content=scrollable_content,
+                width=320,
+                padding=5,
+            ),
+            actions=[ft.TextButton("انصراف", on_click=close),
+                     ft.Button("ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
         self.page.show_dialog(dlg)
 
     def _delete_plan(self, plan: dict):
@@ -364,18 +398,32 @@ class ManageDonations:
             self._show_success("طرح و تراکنش‌های در انتظار آن حذف شدند")
             self._reload()
 
-        def close(e): dlg.open = False; self.page.update()
-        dlg = ft.AlertDialog(title=ft.Text("حذف طرح", font_family="Vazir", weight=ft.FontWeight.BOLD),
-                             content=ft.Text(
-                                 f"آیا از حذف «{plan.get('title', '')}» و تراکنش‌های در انتظار آن اطمینان دارید؟", font_family="Vazir"),
-                             actions=[ft.TextButton("انصراف", on_click=close), ft.Button("حذف", on_click=confirm, style=ft.ButtonStyle(bgcolor=AppTheme.ERROR, color="#FFFFFF"))])
+        def close(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            title=ft.Text("حذف طرح", font_family="Vazir",
+                          weight=ft.FontWeight.BOLD),
+            content=ft.Text(
+                f"آیا از حذف «{plan.get('title', '')}» و تراکنش‌های در انتظار آن اطمینان دارید؟", font_family="Vazir"),
+            actions=[ft.TextButton("انصراف", on_click=close),
+                     ft.Button("حذف", on_click=confirm, style=ft.ButtonStyle(bgcolor=AppTheme.ERROR, color="#FFFFFF"))],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
         self.page.show_dialog(dlg)
 
-    def _approve(self, don: dict): api.post("admin/financial/approve.php", {"id": don.get(
-        "id"), "action": "approve"}); self._show_success("کمک تأیید شد"); self._reload()
+    def _approve(self, don: dict):
+        api.post("admin/financial/approve.php",
+                 {"id": don.get("id"), "action": "approve"})
+        self._show_success("کمک تأیید شد")
+        self._reload()
 
-    def _reject(self, don: dict): api.post("admin/financial/approve.php",
-                                           {"id": don.get("id"), "action": "reject"}); self._show_success("کمک رد شد"); self._reload()
+    def _reject(self, don: dict):
+        api.post("admin/financial/approve.php",
+                 {"id": don.get("id"), "action": "reject"})
+        self._show_success("کمک رد شد")
+        self._reload()
 
     def _view_receipt(self, url: str):
         if url:
@@ -391,8 +439,10 @@ class ManageDonations:
         import time
         time.sleep(1.5)
 
-    def _reload(self): self.page.clean(); self.page.add(
-        self.build()); self.page.update()
+    def _reload(self):
+        self.page.clean()
+        self.page.add(self.build())
+        self.page.update()
 
     def _logout(self, e):
         from src.services.api_client import api as api_mod
@@ -409,4 +459,5 @@ class ManageDonations:
         self.page.add(login_page.build())
         self.page.update()
 
-    def go_back(self, e): self.on_back()
+    def go_back(self, e):
+        self.on_back()

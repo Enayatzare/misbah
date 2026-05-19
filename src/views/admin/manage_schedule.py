@@ -1,6 +1,6 @@
 # ==========================================
 # فایل: src/views/admin/manage_schedule.py
-# (نسخه اصلاح شده - نمایش صحیح ساعت شروع و پایان)
+# (نسخه اصلاح شده - دیالوگ‌های اسکرول‌دار)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -113,22 +113,49 @@ class ManageSchedule:
         day_dd = ft.Dropdown(label="روز", value="saturday", options=[ft.dropdown.Option(
             d[0], d[1]) for d in DAYS_OF_WEEK], border_radius=10, bgcolor="#FFFFFF")
         time_start_field = ft.TextField(
-            label="ساعت شروع", border_radius=10, bgcolor="#FFFFFF")
+            label="ساعت شروع", border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 09:00")
         time_end_field = ft.TextField(
-            label="ساعت پایان", border_radius=10, bgcolor="#FFFFFF")
+            label="ساعت پایان", border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 11:00")
         lecturer_field = ft.TextField(
             label="سخنران/ مداح", border_radius=10, bgcolor="#FFFFFF")
         desc_field = ft.TextField(
-            label="توضیحات", border_radius=10, bgcolor="#FFFFFF", max_lines=2, multiline=True)
+            label="توضیحات", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
+
+        # ایجاد محتوای اسکرول‌دار با ListView
+        scrollable_content = ft.ListView(
+            controls=[
+                title_field,
+                ft.Container(height=8),
+                day_dd,
+                ft.Container(height=8),
+                time_start_field,
+                ft.Container(height=8),
+                time_end_field,
+                ft.Container(height=8),
+                lecturer_field,
+                ft.Container(height=8),
+                desc_field,
+                ft.Container(height=8),
+                msg,
+            ],
+            height=400,
+            spacing=0,
+        )
 
         def save(e):
             if not title_field.value:
                 msg.value = "عنوان الزامی است"
                 self.page.update()
                 return
-            data = {"title": title_field.value, "day": day_dd.value, "time_start": time_start_field.value or "", "time_end": time_end_field.value or "",
-                    "lecturer": lecturer_field.value or "", "description": desc_field.value or ""}
+            data = {
+                "title": title_field.value,
+                "day": day_dd.value,
+                "time_start": time_start_field.value or "",
+                "time_end": time_end_field.value or "",
+                "lecturer": lecturer_field.value or "",
+                "description": desc_field.value or ""
+            }
             result = api.post("admin/events/create.php", data)
             if result.get("message"):
                 dlg.open = False
@@ -139,11 +166,22 @@ class ManageSchedule:
                 msg.value = result.get("error", "خطا")
                 self.page.update()
 
-        def close(e): dlg.open = False; self.page.update()
-        dlg = ft.AlertDialog(title=ft.Text("افزودن برنامه", font_family="Vazir", weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-                             content=ft.Column([title_field, ft.Container(height=8), day_dd, ft.Container(height=8), time_start_field, ft.Container(height=8),
-                                                time_end_field, ft.Container(height=8), lecturer_field, ft.Container(height=8), desc_field, ft.Container(height=8), msg], width=300),
-                             actions=[ft.TextButton("انصراف", on_click=close), ft.Button("ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))])
+        def close(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            title=ft.Text("افزودن برنامه", font_family="Vazir",
+                          weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+            content=ft.Container(
+                content=scrollable_content,
+                width=320,
+                padding=5,
+            ),
+            actions=[ft.TextButton("انصراف", on_click=close),
+                     ft.Button("ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
         self.page.show_dialog(dlg)
 
     def _show_edit_form(self, item: dict):
@@ -152,18 +190,46 @@ class ManageSchedule:
         day_dd = ft.Dropdown(label="روز", value=item.get("day", "saturday"), options=[
                              ft.dropdown.Option(d[0], d[1]) for d in DAYS_OF_WEEK], border_radius=10, bgcolor="#FFFFFF")
         time_start_field = ft.TextField(label="ساعت شروع", value=item.get(
-            "time_start", "")[:5], border_radius=10, bgcolor="#FFFFFF")
+            "time_start", "")[:5], border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 09:00")
         time_end_field = ft.TextField(label="ساعت پایان", value=item.get(
-            "time_end", "")[:5], border_radius=10, bgcolor="#FFFFFF")
+            "time_end", "")[:5], border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 11:00")
         lecturer_field = ft.TextField(label="سخنران", value=item.get(
             "lecturer", ""), border_radius=10, bgcolor="#FFFFFF")
         desc_field = ft.TextField(label="توضیحات", value=item.get(
-            "description", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=2, multiline=True)
+            "description", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
+        # ایجاد محتوای اسکرول‌دار با ListView
+        scrollable_content = ft.ListView(
+            controls=[
+                title_field,
+                ft.Container(height=8),
+                day_dd,
+                ft.Container(height=8),
+                time_start_field,
+                ft.Container(height=8),
+                time_end_field,
+                ft.Container(height=8),
+                lecturer_field,
+                ft.Container(height=8),
+                desc_field,
+                ft.Container(height=8),
+                msg,
+            ],
+            height=400,
+            spacing=0,
+        )
+
         def save(e):
-            data = {"id": item.get("id"), "title": title_field.value, "day": day_dd.value, "time_start": time_start_field.value or "",
-                    "time_end": time_end_field.value or "", "lecturer": lecturer_field.value or "", "description": desc_field.value or ""}
+            data = {
+                "id": item.get("id"),
+                "title": title_field.value,
+                "day": day_dd.value,
+                "time_start": time_start_field.value or "",
+                "time_end": time_end_field.value or "",
+                "lecturer": lecturer_field.value or "",
+                "description": desc_field.value or ""
+            }
             result = api.post("admin/events/update.php", data)
             if result.get("message"):
                 dlg.open = False
@@ -174,20 +240,45 @@ class ManageSchedule:
                 msg.value = result.get("error", "خطا")
                 self.page.update()
 
-        def close(e): dlg.open = False; self.page.update()
-        dlg = ft.AlertDialog(title=ft.Text("ویرایش", font_family="Vazir", weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-                             content=ft.Column([title_field, ft.Container(height=8), day_dd, ft.Container(height=8), time_start_field, ft.Container(height=8),
-                                                time_end_field, ft.Container(height=8), lecturer_field, ft.Container(height=8), desc_field, ft.Container(height=8), msg], width=300),
-                             actions=[ft.TextButton("انصراف", on_click=close), ft.Button("ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))])
+        def close(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            title=ft.Text("ویرایش برنامه", font_family="Vazir",
+                          weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+            content=ft.Container(
+                content=scrollable_content,
+                width=320,
+                padding=5,
+            ),
+            actions=[ft.TextButton("انصراف", on_click=close),
+                     ft.Button("ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
         self.page.show_dialog(dlg)
 
     def _delete_item(self, item: dict):
-        def confirm(e): api.post("admin/events/delete.php", {"id": item.get(
-            "id")}); dlg.open = False; self.page.update(); self._show_success("برنامه حذف شد"); self._reload()
+        def confirm(e):
+            api.post("admin/events/delete.php", {"id": item.get("id")})
+            dlg.open = False
+            self.page.update()
+            self._show_success("برنامه حذف شد")
+            self._reload()
 
-        def close(e): dlg.open = False; self.page.update()
-        dlg = ft.AlertDialog(title=ft.Text("حذف", font_family="Vazir", weight=ft.FontWeight.BOLD), content=ft.Text(f"آیا از حذف «{item.get('title', '')}» اطمینان دارید؟", font_family="Vazir"),
-                             actions=[ft.TextButton("انصراف", on_click=close), ft.Button("حذف", on_click=confirm, style=ft.ButtonStyle(bgcolor=AppTheme.ERROR, color="#FFFFFF"))])
+        def close(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            title=ft.Text("حذف برنامه", font_family="Vazir",
+                          weight=ft.FontWeight.BOLD),
+            content=ft.Text(f"آیا از حذف «{item.get('title', '')}» اطمینان دارید؟",
+                            font_family="Vazir"),
+            actions=[ft.TextButton("انصراف", on_click=close),
+                     ft.Button("حذف", on_click=confirm, style=ft.ButtonStyle(bgcolor=AppTheme.ERROR, color="#FFFFFF"))],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
         self.page.show_dialog(dlg)
 
     def _show_success(self, msg: str):
@@ -199,8 +290,10 @@ class ManageSchedule:
         import time
         time.sleep(1.5)
 
-    def _reload(self): self.page.clean(); self.page.add(
-        self.build()); self.page.update()
+    def _reload(self):
+        self.page.clean()
+        self.page.add(self.build())
+        self.page.update()
 
     def _logout(self, e):
         from src.services.api_client import api as api_mod
@@ -217,4 +310,5 @@ class ManageSchedule:
         self.page.add(login_page.build())
         self.page.update()
 
-    def go_back(self, e): self.on_back()
+    def go_back(self, e):
+        self.on_back()

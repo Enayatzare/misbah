@@ -56,7 +56,7 @@ class DuasPage:
                     [
                         ft.Icon(ft.icons.Icons.MENU_BOOK, size=28,
                                 color=AppTheme.SECONDARY),
-                        ft.Text("قرآن و ادعیه", size=36, font_family="IranNastaliq",
+                        ft.Text("قرآن و ادعیه", size=32, font_family="IranNastaliq",
                                 color=AppTheme.SECONDARY, text_align=ft.TextAlign.CENTER),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,

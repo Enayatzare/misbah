@@ -90,6 +90,12 @@ class AdminPanel:
 
     def load_stats(self):
         stats = api.get("admin/dashboard/get_stats.php")
+
+        # همچنین تعداد آگهی‌های ترحیم را به طور جداگانه دریافت می‌کنیم
+        deceased_result = api.get("social/get_deceased.php")
+        total_deceased = len(deceased_result) if isinstance(
+            deceased_result, list) else 0
+
         if stats and "error" not in stats:
             self.stats_row.controls = [
                 self._build_stat_card("اطلاعیه‌ها", ft.icons.Icons.CAMPAIGN, "#E53935", persian_numbers(
@@ -100,6 +106,9 @@ class AdminPanel:
                     str(stats.get("total_events", 0)))),
                 self._build_stat_card("در انتظار", ft.icons.Icons.HANDSHAKE, "#EF6C00", persian_numbers(
                     str(stats.get("pending_donations", 0)))),
+                # ✅ کارت جدید برای آگهی ترحیم
+                self._build_stat_card("آگهی ترحیم", ft.icons.Icons.FLAG, "#616161", persian_numbers(
+                    str(total_deceased))),
             ]
             self.page.update()
 
@@ -202,9 +211,9 @@ class AdminPanel:
         self.page.update()
 
     def _logout(self, e):
-        from src.services.api_client import api
+        from src.services.api_client import api as api_mod
         from src.views.auth.login_page import LoginPage
-        api.clear_token()
+        api_mod.clear_token()
         self.page.clean()
 
         def on_login_success(user):

@@ -1,5 +1,6 @@
 # ==========================================
 # 📁 فایل: src/views/admin/manage_announcements.py
+# (نسخه اصلاح شده - دیالوگ‌های اسکرول‌دار)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -138,10 +139,30 @@ class ManageAnnouncements:
         title_field = ft.TextField(
             label="عنوان", border_radius=10, bgcolor="#FFFFFF")
         content_field = ft.TextField(
-            label="متن اطلاعیه", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
-        type_dd = ft.Dropdown(label="نوع", value="general", options=[ft.dropdown.Option("general", "عمومی"), ft.dropdown.Option("urgent", "فوری"), ft.dropdown.Option(
-            "event", "مناسبت"), ft.dropdown.Option("religious", "مذهبی"), ft.dropdown.Option("financial", "مالی")], border_radius=10, bgcolor="#FFFFFF")
+            label="متن اطلاعیه", border_radius=10, bgcolor="#FFFFFF", max_lines=4, multiline=True)
+        type_dd = ft.Dropdown(label="نوع", value="general", options=[
+            ft.dropdown.Option("general", "عمومی"),
+            ft.dropdown.Option("urgent", "فوری"),
+            ft.dropdown.Option("event", "مناسبت"),
+            ft.dropdown.Option("religious", "مذهبی"),
+            ft.dropdown.Option("financial", "مالی")
+        ], border_radius=10, bgcolor="#FFFFFF")
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
+
+        # ایجاد محتوای اسکرول‌دار با ListView
+        scrollable_content = ft.ListView(
+            controls=[
+                title_field,
+                ft.Container(height=10),
+                content_field,
+                ft.Container(height=10),
+                type_dd,
+                ft.Container(height=10),
+                msg,
+            ],
+            height=380,
+            spacing=0,
+        )
 
         def save(e):
             if not title_field.value or not content_field.value:
@@ -149,7 +170,10 @@ class ManageAnnouncements:
                 self.page.update()
                 return
             result = api.post("admin/announcements/create.php", {
-                              "title": title_field.value, "content": content_field.value, "type": type_dd.value})
+                "title": title_field.value,
+                "content": content_field.value,
+                "type": type_dd.value
+            })
             if result.get("message"):
                 dlg.open = False
                 self.page.update()
@@ -159,15 +183,21 @@ class ManageAnnouncements:
                 msg.value = result.get("error", "خطا")
                 self.page.update()
 
-        def close(e): dlg.open = False; self.page.update()
+        def close(e):
+            dlg.open = False
+            self.page.update()
 
         dlg = ft.AlertDialog(
             title=ft.Text("ایجاد اطلاعیه", font_family="Vazir",
                           weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-            content=ft.Column([title_field, ft.Container(height=10), content_field, ft.Container(
-                height=10), type_dd, ft.Container(height=8), msg], width=300),
-            actions=[ft.TextButton("انصراف", on_click=close), ft.Button(
-                "ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))],
+            content=ft.Container(
+                content=scrollable_content,
+                width=320,
+                padding=5,
+            ),
+            actions=[ft.TextButton("انصراف", on_click=close),
+                     ft.Button("ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))],
+            actions_alignment=ft.MainAxisAlignment.END,
         )
         self.page.show_dialog(dlg)
 
@@ -175,18 +205,42 @@ class ManageAnnouncements:
         title_field = ft.TextField(label="عنوان", value=ann.get(
             "title", ""), border_radius=10, bgcolor="#FFFFFF")
         content_field = ft.TextField(label="متن اطلاعیه", value=ann.get(
-            "content", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
-        type_dd = ft.Dropdown(label="نوع", value=ann.get("type", "general"), options=[ft.dropdown.Option("general", "عمومی"), ft.dropdown.Option("urgent", "فوری"), ft.dropdown.Option(
-            "event", "مناسبت"), ft.dropdown.Option("religious", "مذهبی"), ft.dropdown.Option("financial", "مالی")], border_radius=10, bgcolor="#FFFFFF")
+            "content", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=4, multiline=True)
+        type_dd = ft.Dropdown(label="نوع", value=ann.get("type", "general"), options=[
+            ft.dropdown.Option("general", "عمومی"),
+            ft.dropdown.Option("urgent", "فوری"),
+            ft.dropdown.Option("event", "مناسبت"),
+            ft.dropdown.Option("religious", "مذهبی"),
+            ft.dropdown.Option("financial", "مالی")
+        ], border_radius=10, bgcolor="#FFFFFF")
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
+
+        # ایجاد محتوای اسکرول‌دار با ListView
+        scrollable_content = ft.ListView(
+            controls=[
+                title_field,
+                ft.Container(height=10),
+                content_field,
+                ft.Container(height=10),
+                type_dd,
+                ft.Container(height=10),
+                msg,
+            ],
+            height=380,
+            spacing=0,
+        )
 
         def save(e):
             if not title_field.value or not content_field.value:
                 msg.value = "عنوان و متن الزامی است"
                 self.page.update()
                 return
-            result = api.post("admin/announcements/update.php", {"id": ann.get(
-                "id"), "title": title_field.value, "content": content_field.value, "type": type_dd.value})
+            result = api.post("admin/announcements/update.php", {
+                "id": ann.get("id"),
+                "title": title_field.value,
+                "content": content_field.value,
+                "type": type_dd.value
+            })
             if result.get("message"):
                 dlg.open = False
                 self.page.update()
@@ -196,25 +250,45 @@ class ManageAnnouncements:
                 msg.value = result.get("error", "خطا")
                 self.page.update()
 
-        def close(e): dlg.open = False; self.page.update()
+        def close(e):
+            dlg.open = False
+            self.page.update()
 
         dlg = ft.AlertDialog(
             title=ft.Text("ویرایش اطلاعیه", font_family="Vazir",
                           weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-            content=ft.Column([title_field, ft.Container(height=10), content_field, ft.Container(
-                height=10), type_dd, ft.Container(height=8), msg], width=300),
-            actions=[ft.TextButton("انصراف", on_click=close), ft.Button(
-                "ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))],
+            content=ft.Container(
+                content=scrollable_content,
+                width=320,
+                padding=5,
+            ),
+            actions=[ft.TextButton("انصراف", on_click=close),
+                     ft.Button("ذخیره", on_click=save, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF"))],
+            actions_alignment=ft.MainAxisAlignment.END,
         )
         self.page.show_dialog(dlg)
 
     def _delete_announcement(self, ann: dict):
-        def confirm(e): api.post("admin/announcements/delete.php", {"id": ann.get(
-            "id")}); dlg.open = False; self.page.update(); self._show_success("اطلاعیه حذف شد"); self._reload()
+        def confirm(e):
+            api.post("admin/announcements/delete.php", {"id": ann.get("id")})
+            dlg.open = False
+            self.page.update()
+            self._show_success("اطلاعیه حذف شد")
+            self._reload()
 
-        def close(e): dlg.open = False; self.page.update()
-        dlg = ft.AlertDialog(title=ft.Text("حذف", font_family="Vazir", weight=ft.FontWeight.BOLD), content=ft.Text(f"آیا از حذف «{ann.get('title', '')}» اطمینان دارید؟", font_family="Vazir"), actions=[
-                             ft.TextButton("انصراف", on_click=close), ft.Button("حذف", on_click=confirm, style=ft.ButtonStyle(bgcolor=AppTheme.ERROR, color="#FFFFFF"))])
+        def close(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            title=ft.Text("حذف اطلاعیه", font_family="Vazir",
+                          weight=ft.FontWeight.BOLD),
+            content=ft.Text(
+                f"آیا از حذف «{ann.get('title', '')}» اطمینان دارید؟", font_family="Vazir"),
+            actions=[ft.TextButton("انصراف", on_click=close),
+                     ft.Button("حذف", on_click=confirm, style=ft.ButtonStyle(bgcolor=AppTheme.ERROR, color="#FFFFFF"))],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
         self.page.show_dialog(dlg)
 
     def _show_success(self, msg: str):
@@ -226,13 +300,15 @@ class ManageAnnouncements:
         import time
         time.sleep(1.5)
 
-    def _reload(self): self.page.clean(); self.page.add(
-        self.build()); self.page.update()
+    def _reload(self):
+        self.page.clean()
+        self.page.add(self.build())
+        self.page.update()
 
     def _logout(self, e):
-        from src.services.api_client import api
+        from src.services.api_client import api as api_mod
         from src.views.auth.login_page import LoginPage
-        api.clear_token()
+        api_mod.clear_token()
         self.page.clean()
 
         def on_login_success(user):
@@ -244,4 +320,5 @@ class ManageAnnouncements:
         self.page.add(login_page.build())
         self.page.update()
 
-    def go_back(self, e): self.on_back()
+    def go_back(self, e):
+        self.on_back()

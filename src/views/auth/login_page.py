@@ -60,6 +60,37 @@ class LoginPage:
         self.loading = ft.ProgressBar(
             visible=False, color=AppTheme.PRIMARY, bgcolor="#E0E0E0", height=2)
 
+        # تنظیم رویداد back
+        self.page.on_pop = self.on_back_pressed
+
+    def on_back_pressed(self, e):
+        """نمایش دیالوگ خروج از برنامه"""
+        def on_confirm(e):
+            self.page.window.close()
+
+        def on_cancel(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            bgcolor="#0D1B0F",
+            title=ft.Text("خروج از برنامه", font_family="Vazir",
+                          weight=ft.FontWeight.BOLD, color=AppTheme.SECONDARY,
+                          text_align=ft.TextAlign.CENTER),
+            content=ft.Text("آیا می‌خواهید از برنامه خارج شوید؟",
+                            font_family="Vazir", color="#FFFFFF",
+                            text_align=ft.TextAlign.CENTER),
+            actions=[
+                ft.TextButton("خیر", on_click=on_cancel,
+                              style=ft.ButtonStyle(color="#FFFFFF60")),
+                ft.Button("بله", on_click=on_confirm,
+                          style=ft.ButtonStyle(bgcolor=AppTheme.ERROR, color="#FFFFFF")),
+            ],
+            actions_alignment=ft.MainAxisAlignment.CENTER,
+        )
+        self.page.show_dialog(dlg)
+        return True  # جلوگیری از خروج خودکار
+
     def build(self):
         background = ft.Container(
             gradient=ft.LinearGradient(

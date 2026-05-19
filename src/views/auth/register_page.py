@@ -58,6 +58,14 @@ class RegisterPage:
         self.loading = ft.ProgressBar(
             visible=False, color=AppTheme.PRIMARY, bgcolor="#E0E0E0", height=2)
 
+        # تنظیم رویداد back برای بازگشت به صفحه لاگین
+        self.page.on_pop = self.on_back_pressed
+
+    def on_back_pressed(self, e):
+        """بازگشت به صفحه لاگین"""
+        self.go_to_login(None)
+        return True  # جلوگیری از رفتار پیش‌فرض
+
     def build(self):
         background = ft.Container(
             gradient=ft.LinearGradient(

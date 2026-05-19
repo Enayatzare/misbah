@@ -15,8 +15,38 @@ class Dashboard:
     def __init__(self, page: ft.Page, user: dict):
         self.page = page
         self.user = user
-        # ✅ اصلاح مسیر لوگو برای PWA (نسبی و ساده)
         self.logo_path = "assets/images/logo_transparent.png"
+
+        # تنظیم رویداد back برای دیالوگ خروج
+        self.page.on_pop = self.on_back_pressed
+
+    def on_back_pressed(self, e):
+        """نمایش دیالوگ خروج از برنامه"""
+        def on_confirm(e):
+            self.page.window.close()
+
+        def on_cancel(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            bgcolor="#0D1B0F",
+            title=ft.Text("خروج از برنامه", font_family="Vazir",
+                          weight=ft.FontWeight.BOLD, color=AppTheme.SECONDARY,
+                          text_align=ft.TextAlign.CENTER),
+            content=ft.Text("آیا می‌خواهید از برنامه خارج شوید؟",
+                            font_family="Vazir", color="#FFFFFF",
+                            text_align=ft.TextAlign.CENTER),
+            actions=[
+                ft.TextButton("خیر", on_click=on_cancel,
+                              style=ft.ButtonStyle(color="#FFFFFF60")),
+                ft.Button("بله", on_click=on_confirm,
+                          style=ft.ButtonStyle(bgcolor=AppTheme.ERROR, color="#FFFFFF")),
+            ],
+            actions_alignment=ft.MainAxisAlignment.CENTER,
+        )
+        self.page.show_dialog(dlg)
+        return True  # جلوگیری از خروج خودکار
 
     def build(self):
         user_initial = self.user.get("full_name", "?")[0]
@@ -118,10 +148,30 @@ class Dashboard:
             cards.controls.append(self._build_card(
                 "پنل مدیریت", ft.icons.Icons.DASHBOARD_CUSTOMIZE, "#6A1B9A", "#E1BEE7", self.show_admin_panel))
 
+        main_content = ft.Column(
+            [
+                header,
+                ft.Container(
+                    content=ft.Text("دسترسی سریع", size=16, font_family="Vazir",
+                                    weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
+                    padding=ft.Padding(20, 20, 0, 0)
+                ),
+                cards,
+                ft.Container(height=80),
+            ],
+            spacing=0,
+        )
+
+        scrollable_content = ft.ListView(
+            controls=[main_content],
+            expand=True,
+            padding=0,
+        )
+
         result = ft.Container(
-            content=ft.Column([header, ft.Container(content=ft.Text("دسترسی سریع", size=16, font_family="Vazir",
-                              weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY), padding=ft.Padding(20, 20, 0, 0)), cards], spacing=0),
-            bgcolor=AppTheme.BACKGROUND, expand=True,
+            content=scrollable_content,
+            bgcolor=AppTheme.BACKGROUND,
+            expand=True,
         )
 
         self._check_for_update()
@@ -299,23 +349,68 @@ class Dashboard:
 
     def _show_donation_history(self, e):
         result = api.get("financial/get_user_history.php")
+        user_full_name = self.user.get("full_name", "کاربر")
+
         if result.get("transactions"):
-            items = [ft.Text("تاریخچه مشارکت‌های من", size=16, font_family="Vazir", weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER, color=AppTheme.SECONDARY), ft.Container(
-                height=6), ft.Row([ft.Container(height=1.5, width=40, bgcolor="AppTheme.SECONDARY", border_radius=1)], alignment=ft.MainAxisAlignment.CENTER), ft.Container(height=15)]
+            items = [
+                ft.Text(f"تاریخچه مشارکت‌های {user_full_name}", size=16, font_family="Vazir",
+                        weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER, color=AppTheme.SECONDARY),
+                ft.Container(height=6),
+                ft.Row([ft.Container(height=1.5, width=40, bgcolor=AppTheme.SECONDARY, border_radius=1)],
+                       alignment=ft.MainAxisAlignment.CENTER),
+                ft.Container(height=15)
+            ]
             for tx in result["transactions"][:20]:
                 amount = tx.get("amount", 0)
                 status = tx.get("status", "pending")
                 status_text = "✅ تأیید شده" if status == "completed" else "⏳ در انتظار"
                 status_color = "#81C784" if status == "completed" else "#FFB74D"
-                items.append(ft.Container(content=ft.Row([ft.Text(f"{persian_numbers(f'{int(float(amount)):,}')} تومان", size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color="#212121"), ft.Container(
-                    expand=True), ft.Text(status_text, size=12, font_family="Vazir", color=status_color)]), padding=10, bgcolor="#FFFFFF", border_radius=8, margin=ft.Margin(0, 0, 0, 6)))
+                items.append(
+                    ft.Container(
+                        content=ft.Column([
+                            ft.Row([
+                                ft.Text(f"{persian_numbers(f'{int(float(amount)):,}')} تومان",
+                                        size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color="#212121"),
+                                ft.Container(expand=True),
+                                ft.Text(status_text, size=12,
+                                        font_family="Vazir", color=status_color)
+                            ]),
+                            ft.Text(f"توسط {user_full_name}",
+                                    size=11, font_family="Vazir", color=AppTheme.TEXT_HINT),
+                        ]),
+                        padding=10, bgcolor="#FFFFFF", border_radius=8, margin=ft.Margin(0, 0, 0, 6)
+                    )
+                )
+            total_donated = result.get("total_donated", 0)
+            if total_donated:
+                items.append(ft.Container(height=10))
+                items.append(
+                    ft.Container(
+                        content=ft.Row([
+                            ft.Text("مجموع مشارکت‌ها:", size=12,
+                                    font_family="Vazir", color=AppTheme.TEXT_HINT),
+                            ft.Container(expand=True),
+                            ft.Text(f"{persian_numbers(f'{int(float(total_donated)):,}')} تومان",
+                                    size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color=AppTheme.PRIMARY)
+                        ]),
+                        padding=10, bgcolor="#E8F5E9", border_radius=8, margin=ft.Margin(0, 5, 0, 0)
+                    )
+                )
         else:
-            items = [ft.Text("تاکنون کمکی ثبت نکرده‌اید", size=14, font_family="Vazir",
-                             color="#FFFFFF60", text_align=ft.TextAlign.CENTER)]
+            items = [ft.Text(f"کاربر {user_full_name} تاکنون کمکی ثبت نکرده است",
+                             size=14, font_family="Vazir", color="#FFFFFF60", text_align=ft.TextAlign.CENTER)]
 
-        def close(e): dlg.open = False; self.page.update()
-        dlg = ft.AlertDialog(bgcolor="#0D1B0F", content=ft.Column(items, width=300, height=400, scroll=ft.ScrollMode.AUTO, spacing=0), actions=[
-                             ft.TextButton("بستن", on_click=close, style=ft.ButtonStyle(color=AppTheme.SECONDARY))])
+        def close(e):
+            dlg.open = False
+            self.page.update()
+
+        dlg = ft.AlertDialog(
+            bgcolor="#0D1B0F",
+            content=ft.Column(items, width=300, height=400,
+                              scroll=ft.ScrollMode.AUTO, spacing=0),
+            actions=[ft.TextButton(
+                "بستن", on_click=close, style=ft.ButtonStyle(color=AppTheme.SECONDARY))]
+        )
         self.page.show_dialog(dlg)
 
     def _show_notifications_dialog(self, e):
@@ -374,8 +469,6 @@ class Dashboard:
                     color="#FFFFFF", text_align=ft.TextAlign.CENTER),
             ft.Text("مسجد حضرت ابراهیم (ع)", size=16, font_family="Vazir",
                     weight=ft.FontWeight.BOLD, color="#FFFFFF", text_align=ft.TextAlign.CENTER),
-            # ft.Text("شهر دزفول", size=13, font_family="Vazir",
-            #         color="#FFFFFF60", text_align=ft.TextAlign.CENTER),
             ft.Container(height=15), ft.Divider(
                 height=1, color="#FFFFFF20"), ft.Container(height=10),
             ft.Text("نسخه ۱.۰.۰", size=16, font_family="Vazir",

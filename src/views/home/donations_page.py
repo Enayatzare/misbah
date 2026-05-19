@@ -54,7 +54,7 @@ class DonationsPage:
             items = [
                 ft.Container(height=10),
                 ft.Row([ft.Icon(ft.Icons.HANDSHAKE, size=28, color=AppTheme.SECONDARY),
-                        ft.Text("مشارکت‌های مردمی", size=36, font_family="IranNastaliq", color=AppTheme.SECONDARY)],
+                        ft.Text("مشارکت‌های مردمی", size=32, font_family="IranNastaliq", color=AppTheme.SECONDARY)],
                        alignment=ft.MainAxisAlignment.CENTER, spacing=10),
                 ft.Container(height=5),
                 ft.Row([ft.Container(height=1.5, width=60, bgcolor=AppTheme.SECONDARY,

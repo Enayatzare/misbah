@@ -59,7 +59,7 @@ class AnnouncementsPage:
                     [
                         ft.Icon(ft.icons.Icons.CAMPAIGN, size=28,
                                 color=AppTheme.SECONDARY),
-                        ft.Text("اطلاعیه‌ها و اخبار", size=36, font_family="IranNastaliq",
+                        ft.Text("اطلاعیه‌ها و اخبار", size=32, font_family="IranNastaliq",
                                 color=AppTheme.SECONDARY, text_align=ft.TextAlign.CENTER),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
