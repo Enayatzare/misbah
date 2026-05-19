@@ -193,7 +193,7 @@ class ManageSchedule:
             "time_start", "")[:5], border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 09:00")
         time_end_field = ft.TextField(label="ساعت پایان", value=item.get(
             "time_end", "")[:5], border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 11:00")
-        lecturer_field = ft.TextField(label="سخنران", value=item.get(
+        lecturer_field = ft.TextField(label="سخنران/ مداح", value=item.get(
             "lecturer", ""), border_radius=10, bgcolor="#FFFFFF")
         desc_field = ft.TextField(label="توضیحات", value=item.get(
             "description", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
