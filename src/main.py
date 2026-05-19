@@ -1,9 +1,14 @@
 import flet as ft
 import asyncio
 import os
+import json  # برای خواندن فایل JSON اضافه شد
 from src.theme import AppTheme
 from src.config import APP_NAME, APP_VERSION
 from src.utils.formatters import persian_numbers
+
+# دریافت مسیر امن ذخیره‌سازی داده‌ها
+APP_STORAGE_DIR = os.environ.get("FLET_APP_STORAGE_DATA", ".")
+SAVED_LOGIN_FILE = os.path.join(APP_STORAGE_DIR, "saved_login.json")
 
 
 def main(page: ft.Page):
@@ -146,7 +151,9 @@ def main(page: ft.Page):
         await asyncio.sleep(4)
         page.clean()
         page.bgcolor = AppTheme.BACKGROUND
-        show_main_page(page)
+        # >>> تلاش برای ورود خودکار با اطلاعات ذخیره شده <<<
+        if not await try_auto_login(page):
+            show_main_page(page)
 
     page.run_task(animate_splash)
 
@@ -172,4 +179,43 @@ def show_main_page(page: ft.Page):
     page.update()
 
 
-# ft.run(main)
+# >>> تابع جدید برای تلاش ورود خودکار <<<
+async def try_auto_login(page: ft.Page):
+    """اگر اطلاعات ورود ذخیره شده باشد، سعی می‌کند بدون نمایش صفحه لاگین وارد شود."""
+    if not os.path.exists(SAVED_LOGIN_FILE):
+        print("هیچ اطلاعات ورود ذخیره شده‌ای یافت نشد.")
+        return False
+
+    try:
+        with open(SAVED_LOGIN_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        phone = data.get("phone")
+        password = data.get("password")
+        if not phone or not password:
+            return False
+
+        print(f"در حال ورود خودکار با شماره {phone}...")
+        from src.services.api_client import api
+        result = api.post("auth/login.php",
+                          {"phone": phone, "password": password})
+
+        if "token" in result:
+            api.set_token(result["token"])
+            print("ورود خودکار با موفقیت انجام شد.")
+            # مستقیماً به داشبورد برو
+            from src.views.home.dashboard import Dashboard
+            page.clean()
+            page.bgcolor = AppTheme.BACKGROUND
+            dashboard = Dashboard(page, result["user"])
+            page.add(dashboard.build())
+            page.update()
+            return True
+        else:
+            print(
+                f"ورود خودکار ناموفق: {result.get('error', 'خطای ناشناخته')}")
+            # اگر ورود خودکار失敗 شد، فایل ذخیره شده را پاک می‌کنیم تا کاربر مجبور به ورود دستی شود
+            os.remove(SAVED_LOGIN_FILE)
+            return False
+    except Exception as ex:
+        print(f"خطا در فرآیند ورود خودکار: {ex}")
+        return False

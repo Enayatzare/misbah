@@ -1,7 +1,15 @@
 import flet as ft
+import os
+import json  # برای کار با فایل JSON اضافه شد
 from src.theme import AppTheme
 from src.services.api_client import api
-import os
+
+# دریافت مسیر امن ذخیره‌سازی داده‌های برنامه
+# این مسیر در سیستم‌عامل‌های مختلف (ویندوز، اندروید و...) معتبر و خصوصی است
+APP_STORAGE_DIR = os.environ.get("FLET_APP_STORAGE_DATA", ".")
+
+# مسیر کامل فایل ذخیره‌سازی اطلاعات ورود
+SAVED_LOGIN_FILE = os.path.join(APP_STORAGE_DIR, "saved_login.json")
 
 
 class LoginPage:
@@ -177,6 +185,16 @@ class LoginPage:
         self.loading.visible = False
         if "token" in result:
             api.set_token(result["token"])
+
+            # >>> ذخیره‌سازی امن اطلاعات ورود در مسیر خصوصی برنامه <<<
+            try:
+                with open(SAVED_LOGIN_FILE, "w", encoding="utf-8") as f:
+                    json.dump({"phone": phone, "password": password}, f)
+                print(
+                    f"اطلاعات ورود با موفقیت در {SAVED_LOGIN_FILE} ذخیره شد.")
+            except Exception as ex:
+                print(f"خطا در ذخیره‌سازی اطلاعات ورود: {ex}")
+
             self.on_login_success(result["user"])
         else:
             self.error_text.value = result.get("error", "خطا در ورود")

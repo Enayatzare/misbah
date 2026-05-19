@@ -96,7 +96,6 @@ class WeeklySchedulePage:
                 day_name = DAYS_OF_WEEK.get(day, day)
                 is_friday = day == "friday"
 
-                # جمعه: پس‌زمینه طلایی کمرنگ + استایل متفاوت
                 if is_friday:
                     day_container = ft.Container(
                         content=ft.Row(
@@ -180,16 +179,19 @@ class WeeklySchedulePage:
 
         time_str = ""
         if time_start:
-            time_str = persian_numbers(time_end[:5])
+            time_str = persian_numbers(time_start[:5])
         if time_end:
-            time_str += f" - {persian_numbers(time_start[:5])}"
+            time_str += f" - {persian_numbers(time_end[:5])}"
 
         content_col = ft.Column([], expand=True)
 
+        # عنوان برنامه
         title_row = ft.Row(
             [
                 ft.Text(title, size=15, font_family="Vazir",
-                        weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
+                        weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY,
+                        overflow=ft.TextOverflow.VISIBLE,
+                        no_wrap=False),
                 ft.Container(expand=True),
             ]
         )
@@ -205,24 +207,40 @@ class WeeklySchedulePage:
             )
         content_col.controls.append(title_row)
 
+        # سخنران
         if lecturer:
             content_col.controls.append(ft.Container(height=4))
             content_col.controls.append(ft.Text(
-                f"🎙 {lecturer}", size=12, font_family="Vazir", color=AppTheme.TEXT_HINT))
+                f"🎙 {lecturer}", size=12, font_family="Vazir",
+                color=AppTheme.TEXT_HINT,
+                overflow=ft.TextOverflow.VISIBLE,
+                no_wrap=False,
+            ))
 
+        # توضیحات
         if description:
             content_col.controls.append(ft.Container(height=4))
             content_col.controls.append(ft.Text(
-                description, size=12, font_family="Vazir", color=AppTheme.TEXT_SECONDARY))
+                description,
+                size=12,
+                font_family="Vazir",
+                color=AppTheme.TEXT_SECONDARY,
+                overflow=ft.TextOverflow.VISIBLE,
+                no_wrap=False,
+            ))
+
+        # کل محتوای کارت داخل یک Row با اسکرول افقی
+        card_content = ft.Row(
+            [
+                ft.Container(width=12),
+                content_col,
+            ],
+            vertical_alignment=ft.CrossAxisAlignment.START,
+            scroll=ft.ScrollMode.AUTO,
+        )
 
         return ft.Container(
-            content=ft.Row(
-                [
-                    ft.Container(width=12),
-                    content_col,
-                ],
-                vertical_alignment=ft.CrossAxisAlignment.START,
-            ),
+            content=card_content,
             padding=ft.Padding(12, 10, 12, 10),
             bgcolor="#FFFFFF",
             border_radius=10,
