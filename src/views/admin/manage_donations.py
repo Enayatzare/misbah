@@ -1,6 +1,6 @@
 # ==========================================
 # 📁 فایل: src/views/admin/manage_donations.py
-# (نسخه نهایی - شامل تابع _approve)
+# (نسخه نهایی - کارت صندوق مسجد، گزارش مشارکت‌کنندگان، تاریخچه و انتقال)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -70,6 +70,17 @@ class ManageDonations:
         pending = sum(1 for d in self.all_donations if d.get(
             "status") == "pending")
 
+        # محاسبه موجودی صندوق مسجد
+        fund_transactions = [d for d in self.all_donations if d.get(
+            "status") == "rejected_general"]
+        fund_total = sum(float(d.get("amount", 0)) for d in fund_transactions)
+
+        # کم کردن برداشت‌ها از صندوق
+        withdrawals = [d for d in self.all_donations if d.get(
+            "transaction_code", "").startswith("FUND-TRANSFER-")]
+        withdrawn_total = sum(float(d.get("amount", 0)) for d in withdrawals)
+        fund_total -= withdrawn_total
+
         content = [
             ft.Container(height=10),
             ft.Row(
@@ -83,6 +94,9 @@ class ManageDonations:
             ft.Container(height=10),
             ft.Text(f"{persian_numbers(str(pending))} تراکنش در انتظار",
                     size=13, font_family="Vazir", color="#FF8F00"),
+            ft.Container(height=10),
+            # کارت صندوق مسجد
+            self._build_fund_card(fund_total, len(fund_transactions)),
             ft.Container(height=15),
         ]
 
@@ -332,6 +346,291 @@ class ManageDonations:
             margin=ft.Margin(0, 0, 0, 8),
         )
 
+    def _build_fund_card(self, total: float, count: int):
+        """کارت صندوق عمومی مسجد"""
+        total_str = persian_numbers(f"{int(total):,}")
+        count_str = persian_numbers(str(count))
+
+        return ft.Container(
+            content=ft.Row([
+                ft.Container(
+                    content=ft.Icon(ft.icons.Icons.ACCOUNT_BALANCE,
+                                    size=28, color="#FFFFFF"),
+                    width=50, height=50,
+                    bgcolor=AppTheme.SECONDARY,
+                    border_radius=25,
+                    alignment=ft.Alignment(0, 0),
+                ),
+                ft.Container(width=14),
+                ft.Column([
+                    ft.Text("🏛 صندوق عمومی مسجد", size=14, font_family="Vazir",
+                            weight=ft.FontWeight.BOLD, color="#5D4037"),
+                    ft.Text(f"موجودی: {total_str} تومان  |  {count_str} تراکنش",
+                            size=11, font_family="Vazir", color="#8D6E63"),
+                ], expand=True),
+                ft.Icon(ft.icons.Icons.CHEVRON_LEFT,
+                        size=20, color="#8D6E63"),
+            ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=ft.Padding(14, 12, 14, 12),
+            bgcolor="#FFF8E1",
+            border_radius=14,
+            border=ft.Border.all(2, AppTheme.SECONDARY),
+            shadow=ft.BoxShadow(
+                spread_radius=0, blur_radius=8, color="#D4AF3740"),
+            on_click=lambda e: self._show_fund_detail(),
+        )
+
+    def _show_fund_detail(self):
+        """نمایش جزئیات صندوق مسجد با سه زبانه"""
+        fund_transactions = [d for d in self.all_donations if d.get(
+            "status") == "rejected_general"]
+
+        # محتوای هر زبانه
+        self._fund_tab_content = ft.Column(
+            [], expand=True, scroll=ft.ScrollMode.AUTO)
+        self._fund_tab = "participants"
+
+        def switch_tab(tab_id: str):
+            self._fund_tab = tab_id
+            self._build_fund_tab_content(fund_transactions)
+
+        tab_row = ft.Row(
+            [
+                ft.Container(
+                    content=ft.Text("👥 مشارکت‌کنندگان", size=11, font_family="Vazir",
+                                    weight=ft.FontWeight.BOLD if self._fund_tab ==
+                                    "participants" else None,
+                                    color="#000000" if self._fund_tab == "participants" else "#000000"),
+                    padding=ft.Padding(10, 6, 10, 6),
+                    bgcolor=AppTheme.SECONDARY if self._fund_tab == "participants" else "#FFFFFF",
+                    border_radius=12,
+                    on_click=lambda e: switch_tab("participants"),
+                ),
+                ft.Container(
+                    content=ft.Text("📋 تاریخچه", size=11, font_family="Vazir",
+                                    weight=ft.FontWeight.BOLD if self._fund_tab == "history" else None,
+                                    color="#000000" if self._fund_tab == "history" else "#000000"),
+                    padding=ft.Padding(10, 6, 10, 6),
+                    bgcolor=AppTheme.SECONDARY if self._fund_tab == "history" else "#FFFFFF",
+                    border_radius=12,
+                    on_click=lambda e: switch_tab("history"),
+                ),
+                ft.Container(
+                    content=ft.Text("💸 انتقال", size=11, font_family="Vazir",
+                                    weight=ft.FontWeight.BOLD if self._fund_tab == "transfer" else None,
+                                    color="#000000" if self._fund_tab == "transfer" else "#000000"),
+                    padding=ft.Padding(10, 6, 10, 6),
+                    bgcolor=AppTheme.SECONDARY if self._fund_tab == "transfer" else "#FFFFFF",
+                    border_radius=12,
+                    on_click=lambda e: switch_tab("transfer"),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=8,
+        )
+
+        self._build_fund_tab_content(fund_transactions)
+
+        def close(e):
+            self._fund_dlg.open = False
+            self.page.update()
+
+        self._fund_dlg = ft.AlertDialog(
+            title=ft.Text(""),
+            content=ft.Column([
+                ft.Text("🏛 صندوق عمومی مسجد", size=18, font_family="Vazir",
+                        weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER, color=AppTheme.SECONDARY),
+                ft.Container(height=6),
+                ft.Row([ft.Container(height=1.5, width=40, bgcolor=AppTheme.SECONDARY,
+                       border_radius=1)], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Container(height=10),
+                tab_row,
+                ft.Container(height=10),
+                self._fund_tab_content,
+            ], width=340, height=420, spacing=0),
+            actions=[ft.TextButton("بستن", on_click=close,
+                                   style=ft.ButtonStyle(color=AppTheme.SECONDARY))]
+        )
+        self.page.show_dialog(self._fund_dlg)
+
+    def _build_fund_tab_content(self, fund_transactions: list):
+        """ساخت محتوای هر زبانه در دیالوگ صندوق"""
+        self._fund_tab_content.controls.clear()
+
+        if self._fund_tab == "participants":
+            participants = {}
+            for tx in fund_transactions:
+                name = tx.get("user_name", "ناشناس")
+                amount = float(tx.get("amount", 0))
+                if name not in participants:
+                    participants[name] = {"total": 0, "count": 0}
+                participants[name]["total"] += amount
+                participants[name]["count"] += 1
+
+            if participants:
+                for name, data in participants.items():
+                    total_str = persian_numbers(f"{int(data['total']):,}")
+                    count_str = persian_numbers(str(data["count"]))
+                    self._fund_tab_content.controls.append(
+                        ft.Container(
+                            content=ft.Column([
+                                ft.Row([
+                                    ft.Text(name, size=13, font_family="Vazir",
+                                            weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
+                                    ft.Container(expand=True),
+                                    ft.Text(f"{total_str} تومان",
+                                            size=12, font_family="Vazir", weight=ft.FontWeight.BOLD,
+                                            color=AppTheme.PRIMARY),
+                                ]),
+                                ft.Text(f"{count_str} تراکنش",
+                                        size=10, font_family="Vazir", color=AppTheme.TEXT_HINT),
+                            ]),
+                            padding=10, bgcolor="#FFFFFF", border_radius=8,
+                            margin=ft.Margin(0, 0, 0, 6)
+                        )
+                    )
+            else:
+                self._fund_tab_content.controls.append(
+                    ft.Text("هنوز مبلغی به صندوق واریز نشده است",
+                            size=13, font_family="Vazir", color="#FFFFFF60")
+                )
+
+        elif self._fund_tab == "history":
+            if fund_transactions:
+                for tx in fund_transactions[:30]:
+                    user_name = tx.get("user_name", "ناشناس")
+                    amount = float(tx.get("amount", 0))
+                    date = (tx.get("created_at") or "")[:10]
+                    plan_title = tx.get("plan_title", "")
+                    amount_str = persian_numbers(f"{int(amount):,}")
+
+                    self._fund_tab_content.controls.append(
+                        ft.Container(
+                            content=ft.Column([
+                                ft.Row([
+                                    ft.Text(f"{amount_str} تومان",
+                                            size=13, font_family="Vazir", weight=ft.FontWeight.BOLD,
+                                            color=AppTheme.TEXT_PRIMARY),
+                                    ft.Container(expand=True),
+                                    ft.Text(date, size=10, font_family="Vazir",
+                                            color=AppTheme.TEXT_HINT),
+                                ]),
+                                ft.Text(f"از {user_name} - طرح: {plan_title}",
+                                        size=10, font_family="Vazir", color=AppTheme.TEXT_HINT),
+                            ]),
+                            padding=10, bgcolor="#FFFFFF", border_radius=8,
+                            margin=ft.Margin(0, 0, 0, 6)
+                        )
+                    )
+            else:
+                self._fund_tab_content.controls.append(
+                    ft.Text("هنوز مبلغی به صندوق واریز نشده است",
+                            size=13, font_family="Vazir", color="#FFFFFF60")
+                )
+
+        elif self._fund_tab == "transfer":
+            active_plans = [p for p in self.all_plans if float(
+                p.get("target_amount", 0)) > float(p.get("current_amount", 0))]
+
+            if not active_plans:
+                self._fund_tab_content.controls.append(
+                    ft.Column([
+                        ft.Text("هیچ طرح فعالی برای انتقال وجود ندارد",
+                                size=13, font_family="Vazir", color="#FF2233",
+                                text_align=ft.TextAlign.CENTER),
+                        ft.Container(height=10),
+                        ft.Button("➕ ایجاد طرح جدید", width=200,
+                                  style=ft.ButtonStyle(
+                                      bgcolor=AppTheme.PRIMARY, color="#FFFFFF",
+                                      shape=ft.RoundedRectangleBorder(radius=8)),
+                                  on_click=lambda e: self._create_new_plan_from_fund()),
+                    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+                )
+            else:
+                fund_deposits = sum(float(d.get("amount", 0))
+                                    for d in fund_transactions)
+                fund_withdrawals = sum(float(d.get("amount", 0)) for d in self.all_donations if d.get(
+                    "transaction_code", "").startswith("FUND-TRANSFER-"))
+                actual_fund_total = fund_deposits - fund_withdrawals
+                fund_total_str = persian_numbers(f"{int(actual_fund_total):,}")
+
+                self._transfer_plan_dd = ft.Dropdown(
+                    label="انتخاب طرح",
+                    options=[ft.dropdown.Option(str(p["id"]), p.get(
+                        "title", "")) for p in active_plans],
+                    border_radius=10,
+                    bgcolor="#FFFFFF",
+                )
+                self._transfer_amount_field = ft.TextField(
+                    label=f"مبلغ (حداکثر {fund_total_str} تومان)",
+                    keyboard_type=ft.KeyboardType.NUMBER,
+                    border_radius=10,
+                    bgcolor="#FFFFFF",
+                )
+                self._transfer_error = ft.Text(
+                    "", color=AppTheme.ERROR, size=11)
+
+                def do_transfer(e):
+                    plan_id_str = self._transfer_plan_dd.value
+                    amount_str = self._transfer_amount_field.value.strip(
+                    ) if self._transfer_amount_field.value else ""
+
+                    self._transfer_error.value = ""
+
+                    if not plan_id_str:
+                        self._transfer_error.value = "لطفاً یک طرح انتخاب کنید"
+                        self.page.update()
+                        return
+                    if not amount_str or not amount_str.isdigit() or int(amount_str) <= 0:
+                        self._transfer_error.value = "مبلغ معتبر وارد کنید"
+                        self.page.update()
+                        return
+                    if int(amount_str) > actual_fund_total:
+                        self._transfer_error.value = f"مبلغ نمی‌تواند بیشتر از موجودی صندوق ({fund_total_str} تومان) باشد"
+                        self.page.update()
+                        return
+
+                    result = api.post("admin/financial/transfer_from_fund.php", {
+                        "plan_id": int(plan_id_str),
+                        "amount": int(amount_str)
+                    })
+
+                    if result.get("message"):
+                        # بستن دیالوگ
+                        self._fund_dlg.open = False
+                        self.page.update()
+                        # نمایش موفقیت در SnackBar اصلی
+                        self._show_success(result["message"])
+                        # بارگذاری مجدد داده‌ها
+                        self.load_data()
+                    else:
+                        self._transfer_error.value = result.get(
+                            "error", "خطا در انتقال")
+                        self.page.update()
+
+                self._fund_tab_content.controls.extend([
+                    ft.Container(height=5),
+                    self._transfer_plan_dd,
+                    ft.Container(height=10),
+                    self._transfer_amount_field,
+                    ft.Container(height=5),
+                    self._transfer_error,
+                    ft.Container(height=10),
+                    ft.Button("ثبت انتقال به طرح", on_click=do_transfer,
+                              style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF",
+                                                   shape=ft.RoundedRectangleBorder(radius=8))),
+                ])
+
+        self.page.update()
+
+    def _create_new_plan_from_fund(self):
+        """بستن دیالوگ صندوق و باز کردن فرم ایجاد طرح"""
+        self._fund_dlg.open = False
+        self.page.update()
+        # تغییر به تب طرح‌ها و باز کردن فرم
+        self.current_tab = "plans"
+        self._show_plan_form()
+
     def _show_plan_form(self, plan=None):
         is_edit = plan is not None
         title_field = ft.TextField(label="عنوان طرح", value=plan.get(
@@ -431,13 +730,13 @@ class ManageDonations:
         self.page.show_dialog(dlg)
 
     def _approve(self, don: dict):
-        """تأیید کمک - دریافت پاسخ دقیق از API و نمایش پیام مناسب"""
         result = api.post("admin/financial/approve.php",
                           {"id": don.get("id"), "action": "approve"})
 
         if result.get("excess_amount", 0) > 0:
-            approved = persian_numbers(f'{int(result["approved_amount"]):,}')
-            excess = persian_numbers(f'{int(result["excess_amount"]):,}')
+            approved = persian_numbers(
+                f"{int(result['approved_amount']):,}")
+            excess = persian_numbers(f"{int(result['excess_amount']):,}")
             msg = f"تأیید شد. {approved} تومان به طرح اضافه و {excess} تومان به صندوق مسجد واریز شد."
         else:
             msg = "تأیید شد. در صورت تکمیل طرح، مبلغ مازاد به صندوق مسجد واریز خواهد شد."

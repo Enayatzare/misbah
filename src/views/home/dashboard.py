@@ -363,21 +363,44 @@ class Dashboard:
             for tx in result["transactions"][:20]:
                 amount = tx.get("amount", 0)
                 status = tx.get("status", "pending")
-                status_text = "✅ تأیید شده" if status == "completed" else "⏳ در انتظار"
-                status_color = "#81C784" if status == "completed" else "#FFB74D"
+                plan_title = tx.get("plan_title", "")
+
+                # تعیین وضعیت نمایشی برای هر چهار حالت
+                if status == "completed":
+                    status_text = "✅ تأیید شده"
+                    status_color = "#81C784"
+                elif status == "rejected":
+                    status_text = "❌ رد شده"
+                    status_color = "#EF5350"
+                elif status == "rejected_general":
+                    status_text = "🏛 صندوق مسجد"
+                    status_color = "#D4AF37"
+                else:
+                    status_text = "⏳ در انتظار"
+                    status_color = "#FFB74D"
+
+                # ساخت محتوای کارت
+                card_content = [
+                    ft.Row([
+                        ft.Text(f"{persian_numbers(f'{int(float(amount)):,}')} تومان",
+                                size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color="#212121"),
+                        ft.Container(expand=True),
+                        ft.Text(status_text, size=12,
+                                font_family="Vazir", color=status_color)
+                    ]),
+                    ft.Text(f"توسط {user_full_name}",
+                            size=11, font_family="Vazir", color=AppTheme.TEXT_HINT),
+                ]
+
+                if plan_title:
+                    card_content.append(
+                        ft.Text(plan_title, size=10, font_family="Vazir",
+                                color=AppTheme.TEXT_HINT)
+                    )
+
                 items.append(
                     ft.Container(
-                        content=ft.Column([
-                            ft.Row([
-                                ft.Text(f"{persian_numbers(f'{int(float(amount)):,}')} تومان",
-                                        size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color="#212121"),
-                                ft.Container(expand=True),
-                                ft.Text(status_text, size=12,
-                                        font_family="Vazir", color=status_color)
-                            ]),
-                            ft.Text(f"توسط {user_full_name}",
-                                    size=11, font_family="Vazir", color=AppTheme.TEXT_HINT),
-                        ]),
+                        content=ft.Column(card_content),
                         padding=10, bgcolor="#FFFFFF", border_radius=8, margin=ft.Margin(0, 0, 0, 6)
                     )
                 )
