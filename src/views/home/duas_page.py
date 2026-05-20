@@ -1,12 +1,14 @@
 import flet as ft
 from src.theme import AppTheme
 from src.services.api_client import api
+import asyncio
 
 
 class DuasPage:
     def __init__(self, page: ft.Page, on_back):
         self.page = page
         self.on_back = on_back
+        self.all_duas = []  # ذخیره همه ادعیه برای فیلتر شدن
 
     def build(self):
         header = ft.Container(
@@ -22,6 +24,15 @@ class DuasPage:
             ),
             padding=ft.Padding(15, 35, 15, 15),
             bgcolor="#0D1B0F",
+        )
+
+        # نوار جستجو (عیناً مثل پنل ادمین)
+        self.search_field = ft.TextField(
+            hint_text="🔍جستجو در  قرآن و ادعیه",
+            border_radius=10,
+            bgcolor="#FFFFFF",
+            text_size=14,
+            on_change=self._on_search
         )
 
         self.content_column = ft.Column(
@@ -48,8 +59,12 @@ class DuasPage:
 
     def load_duas(self):
         result = api.get("duas/get_list.php")
+        self.all_duas = result if isinstance(result, list) else []
+        self._display(self.all_duas)
 
-        if isinstance(result, list) and len(result) > 0:
+    def _display(self, duas):
+        """نمایش لیست ادعیه با قابلیت فیلتر"""
+        if duas:
             items = [
                 ft.Container(height=10),
                 ft.Row(
@@ -65,8 +80,10 @@ class DuasPage:
                 ft.Container(height=1.5, width=100,
                              bgcolor=AppTheme.SECONDARY, border_radius=1),
                 ft.Container(height=15),
+                self.search_field,  # نوار جستجو
+                ft.Container(height=10),
             ]
-            for dua in result:
+            for dua in duas:
                 items.append(self._build_dua_card(dua))
             items.append(ft.Container(height=20))
             self.content_column.controls = items
@@ -74,11 +91,21 @@ class DuasPage:
         else:
             self.content_column.controls = [
                 ft.Container(height=60),
-                ft.Text("دعایی ثبت نشده است", size=15,
+                ft.Text("موردی یافت نشد", size=15,
                         font_family="Vazir", color="#FFFFFFAA"),
             ]
             self.content_column.alignment = ft.MainAxisAlignment.CENTER
         self.page.update()
+
+    def _on_search(self, e):
+        """فیلتر کردن ادعیه بر اساس جستجو"""
+        query = self.search_field.value.strip() if self.search_field.value else ""
+        if query:
+            filtered = [
+                d for d in self.all_duas if query in d.get("title", "")]
+        else:
+            filtered = self.all_duas
+        self._display(filtered)
 
     def _build_dua_card(self, dua: dict):
         title = dua.get("title", "بدون عنوان")
@@ -127,13 +154,7 @@ class DuasPage:
         file_url = dua.get("file_url", "")
         if file_url:
             full_url = f"http://enayatzare98.ir/{file_url}"
-            import asyncio
             asyncio.create_task(self.page.launch_url(full_url))
-
-    def _close_pdf_dialog(self, dialog):
-        dialog.open = False
-        self.page.overlay.remove(dialog)
-        self.page.update()
 
     def go_back(self, e):
         self.on_back()

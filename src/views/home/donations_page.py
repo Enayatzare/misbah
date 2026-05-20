@@ -1,6 +1,6 @@
 # ==========================================
 # 📁 فایل: src/views/home/donations_page.py
-# (نسخه نهایی - بدون دکمه کپی خودکار)
+# (نسخه نهایی - گروه‌بندی صحیح تراکنش‌ها و نمایش مبلغ مازاد)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -230,19 +230,49 @@ class DonationsPage:
     def _show_history(self, e):
         result = api.get("financial/get_user_history.php")
         if result.get("transactions"):
+            transactions = result["transactions"]
+
+            # گروه‌بندی تراکنش‌ها: جفت کردن اصلی و مازاد
+            groups = {}  # کلید: transaction_code اصلی
+            for tx in transactions:
+                code = tx.get("transaction_code", "")
+                if code.endswith("-GENERAL"):
+                    base_code = code.replace("-GENERAL", "")
+                    if base_code not in groups:
+                        groups[base_code] = {"main": None, "extra": None}
+                    groups[base_code]["extra"] = tx
+                else:
+                    base_code = code
+                    if base_code not in groups:
+                        groups[base_code] = {"main": None, "extra": None}
+                    groups[base_code]["main"] = tx
+
             items = [
                 ft.Text("تاریخچه مشارکت‌های من", size=16, font_family="Vazir",
                         weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER, color=AppTheme.PRIMARY),
                 ft.Divider(height=20, color="#E0E0E0")
             ]
-            for tx in result["transactions"]:
-                amount = tx.get("amount", 0)
-                status = tx.get("status", "pending")
-                if status == "completed":
+
+            for base_code, group in groups.items():
+                main_tx = group["main"]
+                extra_tx = group["extra"]
+
+                if not main_tx:
+                    continue
+
+                main_amount = float(main_tx.get("amount", 0))
+                main_status = main_tx.get("status", "pending")
+                plan_title = main_tx.get("plan_title", "")
+                extra_amount = float(extra_tx.get(
+                    "amount", 0)) if extra_tx else 0
+                total_amount = main_amount + extra_amount  # مبلغ کل واریزی کاربر
+
+                # تعیین وضعیت نمایشی
+                if main_status == "completed":
                     status_text = "✅ تأیید شده"
                     status_color = AppTheme.PRIMARY
-                    bg_color = "#E8F5E9"
-                elif status == "rejected":
+                    bg_color = "#E8F5E9" if extra_amount == 0 else "#FFF8E1"
+                elif main_status == "rejected":
                     status_text = "❌ رد شده"
                     status_color = AppTheme.ERROR
                     bg_color = "#FFEBEE"
@@ -250,13 +280,88 @@ class DonationsPage:
                     status_text = "⏳ در انتظار"
                     status_color = AppTheme.WARNING
                     bg_color = "#FFF3E0"
-                items.append(ft.Container(content=ft.Row([
-                    ft.Text(f"{persian_numbers(f'{int(float(amount)):,}')} تومان",
-                            size=14, font_family="Vazir", weight=ft.FontWeight.BOLD),
-                    ft.Container(expand=True),
-                    ft.Text(status_text, size=12, font_family="Vazir",
-                            color=status_color, weight=ft.FontWeight.BOLD),
-                ]), padding=10, bgcolor=bg_color, border_radius=8, margin=ft.Margin(0, 0, 0, 6)))
+
+                # ساخت کارت
+                card_content = []
+
+                # ردیف اول: مبلغ کل واریزی و وضعیت
+                card_content.append(
+                    ft.Row([
+                        ft.Text(f"مجموع: {persian_numbers(f'{int(total_amount):,}')} تومان",
+                                size=13, font_family="Vazir", weight=ft.FontWeight.BOLD,
+                                color=AppTheme.TEXT_PRIMARY),
+                        ft.Container(expand=True),
+                        ft.Text(status_text, size=11, font_family="Vazir",
+                                color=status_color, weight=ft.FontWeight.BOLD),
+                    ])
+                )
+
+                # نام طرح
+                if plan_title:
+                    card_content.append(ft.Container(height=2))
+                    card_content.append(
+                        ft.Text(plan_title, size=10, font_family="Vazir",
+                                color=AppTheme.TEXT_HINT)
+                    )
+
+                # اگر تأیید شده، تفکیک مبلغ
+                if main_status == "completed":
+                    card_content.append(ft.Container(height=6))
+                    card_content.append(
+                        ft.Row([
+                            ft.Text("✅ تأیید برای طرح:", size=11, font_family="Vazir",
+                                    color=AppTheme.PRIMARY),
+                            ft.Container(expand=True),
+                            ft.Text(f"{persian_numbers(f'{int(main_amount):,}')} تومان", size=12,
+                                    font_family="Vazir", weight=ft.FontWeight.BOLD,
+                                    color=AppTheme.PRIMARY),
+                        ])
+                    )
+
+                    # اگر مازاد به صندوق رفته
+                    if extra_amount > 0:
+                        card_content.append(ft.Container(height=4))
+                        card_content.append(
+                            ft.Row([
+                                ft.Text("🏛 واریز به صندوق مسجد:", size=11, font_family="Vazir",
+                                        color=AppTheme.SECONDARY),
+                                ft.Container(expand=True),
+                                ft.Text(f"{persian_numbers(f'{int(extra_amount):,}')} تومان", size=12,
+                                        font_family="Vazir", weight=ft.FontWeight.BOLD,
+                                        color=AppTheme.SECONDARY),
+                            ])
+                        )
+                        card_content.append(ft.Container(height=4))
+                        card_content.append(
+                            ft.Text(
+                                "به دلیل تکمیل سقف طرح، این مبلغ به صندوق عمومی مسجد منتقل شد و در طرح‌های آتی استفاده خواهد شد.",
+                                size=9, font_family="Vazir",
+                                color=AppTheme.TEXT_HINT,
+                                text_align=ft.TextAlign.RIGHT
+                            )
+                        )
+                elif main_status == "rejected":
+                    card_content.append(ft.Container(height=4))
+                    card_content.append(
+                        ft.Text("این کمک تأیید نشد. لطفاً با مدیریت مسجد تماس بگیرید.",
+                                size=10, font_family="Vazir", color=AppTheme.ERROR)
+                    )
+                else:
+                    card_content.append(ft.Container(height=4))
+                    card_content.append(
+                        ft.Text("در انتظار تأیید مدیر سیستم",
+                                size=10, font_family="Vazir", color=AppTheme.WARNING)
+                    )
+
+                items.append(ft.Container(
+                    content=ft.Column(card_content),
+                    padding=12,
+                    bgcolor=bg_color,
+                    border_radius=10,
+                    border=ft.Border(left=ft.BorderSide(
+                        4, AppTheme.SECONDARY)),
+                    margin=ft.Margin(0, 0, 0, 8)
+                ))
         else:
             items = [ft.Text("تاکنون کمکی ثبت نکرده‌اید", size=14,
                              font_family="Vazir", color=AppTheme.TEXT_HINT)]
@@ -268,7 +373,7 @@ class DonationsPage:
         dlg = ft.AlertDialog(
             title=ft.Text("📋 تاریخچه مشارکت‌ها", font_family="Vazir",
                           weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-            content=ft.Column(items, width=300, height=300,
+            content=ft.Column(items, width=320, height=350,
                               scroll=ft.ScrollMode.AUTO),
             actions=[ft.TextButton("بستن", on_click=close)])
         self.page.show_dialog(dlg)

@@ -1,6 +1,6 @@
 # ==========================================
 # 📁 فایل: src/views/admin/manage_donations.py
-# (نسخه اصلاح شده - دیالوگ‌های اسکرول‌دار + رفع مشکل آپدیت)
+# (نسخه نهایی - شامل تابع _approve)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -250,6 +250,7 @@ class ManageDonations:
             "completed": ("✅ تأیید شده", AppTheme.PRIMARY),
             "pending": ("⏳ در انتظار", AppTheme.WARNING),
             "rejected": ("❌ رد شده", AppTheme.ERROR),
+            "rejected_general": ("🏛 صندوق عمومی", AppTheme.SECONDARY),
         }
         status_text, status_color = status_map.get(
             status, ("⏳ در انتظار", AppTheme.WARNING))
@@ -286,6 +287,23 @@ class ManageDonations:
             ft.Text(date, size=10, font_family="Vazir",
                     color=AppTheme.TEXT_HINT),
         ])
+
+        if status == "rejected_general":
+            card_content.controls.append(ft.Container(height=6))
+            card_content.controls.append(
+                ft.Container(
+                    content=ft.Text(
+                        "این مبلغ به دلیل تکمیل سقف طرح به صندوق عمومی مسجد منتقل شد و در طرح‌های آتی استفاده خواهد شد.",
+                        size=10,
+                        font_family="Vazir",
+                        color=AppTheme.SECONDARY,
+                        text_align=ft.TextAlign.RIGHT,
+                    ),
+                    bgcolor="#FFF8E1",
+                    border_radius=8,
+                    padding=ft.Padding(8, 6, 8, 6),
+                )
+            )
 
         if receipt_url:
             card_content.controls.append(ft.Container(height=4))
@@ -324,7 +342,6 @@ class ManageDonations:
             "description", "") if plan else "", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
-        # ایجاد محتوای اسکرول‌دار با ListView
         scrollable_content = ft.ListView(
             controls=[
                 title_field,
@@ -414,9 +431,18 @@ class ManageDonations:
         self.page.show_dialog(dlg)
 
     def _approve(self, don: dict):
-        api.post("admin/financial/approve.php",
-                 {"id": don.get("id"), "action": "approve"})
-        self._show_success("کمک تأیید شد")
+        """تأیید کمک - دریافت پاسخ دقیق از API و نمایش پیام مناسب"""
+        result = api.post("admin/financial/approve.php",
+                          {"id": don.get("id"), "action": "approve"})
+
+        if result.get("excess_amount", 0) > 0:
+            approved = persian_numbers(f'{int(result["approved_amount"]):,}')
+            excess = persian_numbers(f'{int(result["excess_amount"]):,}')
+            msg = f"تأیید شد. {approved} تومان به طرح اضافه و {excess} تومان به صندوق مسجد واریز شد."
+        else:
+            msg = "تأیید شد. در صورت تکمیل طرح، مبلغ مازاد به صندوق مسجد واریز خواهد شد."
+
+        self._show_success(msg)
         self._reload()
 
     def _reject(self, don: dict):
@@ -437,7 +463,7 @@ class ManageDonations:
         snack.open = True
         self.page.update()
         import time
-        time.sleep(1.5)
+        time.sleep(2)
 
     def _reload(self):
         self.page.clean()
