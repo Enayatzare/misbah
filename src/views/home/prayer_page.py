@@ -19,26 +19,12 @@ PRAYER_NAMES = {
     "Isha": "عشاء",
 }
 
-SHAMSI_YEARS = list(range(1400, 1430))
-SHAMSI_MONTHS = [
-    ("1", "فروردین"), ("2", "اردیبهشت"), ("3", "خرداد"),
-    ("4", "تیر"), ("5", "مرداد"), ("6", "شهریور"),
-    ("7", "مهر"), ("8", "آبان"), ("9", "آذر"),
-    ("10", "دی"), ("11", "بهمن"), ("12", "اسفند"),
+# سرستون‌ها: از راست به چپ = شنبه تا جمعه
+WEEKDAYS = ["ش", "ی", "د", "س", "چ", "پ", "ج"]
+MONTH_NAMES = [
+    "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد",
+    "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"
 ]
-
-
-def get_days_in_month(year: int, month: int) -> list:
-    if month <= 6:
-        return list(range(1, 32))
-    elif month <= 11:
-        return list(range(1, 31))
-    else:
-        try:
-            is_leap = jdatetime.date(year, 12, 30).day == 30
-        except:
-            is_leap = False
-        return list(range(1, 31 if is_leap else 30))
 
 
 def iso_to_time(iso_str: str) -> str:
@@ -80,108 +66,123 @@ class PrayerPage:
             border_radius=ft.BorderRadius(0, 0, 20, 20),
         )
 
-        self.title_text = ft.Row(
+        # عنوان ماه و سال
+        self.month_title = ft.Text(
+            f"{MONTH_NAMES[self.shamsi_month - 1]} {persian_numbers(str(self.shamsi_year))}",
+            size=20,
+            font_family="Vazir",
+            weight=ft.FontWeight.BOLD,
+            color=AppTheme.SECONDARY,
+            text_align=ft.TextAlign.CENTER,
+        )
+
+        # سرستون روزهای هفته
+        weekday_header = ft.Row(
             [
-                ft.Icon(ft.icons.Icons.NIGHTLIGHT_ROUND,
-                        size=26, color=AppTheme.SECONDARY),
-                ft.Text("اوقات شرعی امروز", size=32, font_family="IranNastaliq",
-                        color=AppTheme.SECONDARY, text_align=ft.TextAlign.CENTER),
+                ft.Container(
+                    content=ft.Text(day, size=12, font_family="Vazir",
+                                    weight=ft.FontWeight.BOLD,
+                                    color="#D4AF37" if day == "ج" else AppTheme.TEXT_HINT),
+                    width=42, height=35,
+                    alignment=ft.Alignment(0, 0),
+                ) for day in WEEKDAYS
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            spacing=8,
+            alignment=ft.MainAxisAlignment.SPACE_AROUND,
         )
 
-        self.date_items = ft.Column(
-            [], spacing=8, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+        # جدول روزهای ماه
+        self.calendar_grid = ft.GridView(
+            expand=False,
+            runs_count=7,
+            spacing=3,
+            run_spacing=4,
+            max_extent=46,
+            height=320,
+        )
 
-        days = get_days_in_month(self.shamsi_year, self.shamsi_month)
+        # نوار ابزار تقویم: سال، ماه، دکمه امروز
+        calendar_toolbar = ft.Column([
+            # ردیف اول: تغییر سال + عنوان ماه
+            ft.Row([
+                ft.IconButton(
+                    icon=ft.icons.Icons.KEYBOARD_DOUBLE_ARROW_RIGHT,
+                    icon_size=18,
+                    icon_color=AppTheme.SECONDARY,
+                    tooltip="سال قبل",
+                    on_click=lambda e: self._change_year(-1),
+                ),
+                ft.IconButton(
+                    icon=ft.icons.Icons.CHEVRON_LEFT,
+                    icon_color=AppTheme.SECONDARY,
+                    tooltip="ماه قبل",
+                    on_click=lambda e: self._change_month(-1),
+                ),
+                self.month_title,
+                ft.IconButton(
+                    icon=ft.icons.Icons.CHEVRON_RIGHT,
+                    icon_color=AppTheme.SECONDARY,
+                    tooltip="ماه بعد",
+                    on_click=lambda e: self._change_month(1),
+                ),
+                ft.IconButton(
+                    icon=ft.icons.Icons.KEYBOARD_DOUBLE_ARROW_LEFT,
+                    icon_size=18,
+                    icon_color=AppTheme.SECONDARY,
+                    tooltip="سال بعد",
+                    on_click=lambda e: self._change_year(1),
+                ),
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+            ft.Container(height=5),
+            # ردیف دوم: دکمه امروز
+            ft.Row([
+                ft.Container(expand=True),
+                ft.Container(
+                    content=ft.Row([
+                        ft.Icon(ft.icons.Icons.TODAY, size=14, color=AppTheme.PRIMARY),
+                        ft.Text("امروز", size=12, font_family="Vazir", color=AppTheme.PRIMARY),
+                    ], spacing=4),
+                    padding=ft.Padding(8, 4, 8, 4),
+                    bgcolor="#E8F5E9",
+                    border_radius=12,
+                    on_click=lambda e: self._go_to_today(),
+                ),
+            ]),
+        ])
 
-        # ========== PopupMenuButton روز (بدون آیکون، با ▼) ==========
-        self.day_menu = ft.PopupMenuButton(
-            content=ft.Row([
-                ft.Text(persian_numbers(str(self.shamsi_day)),
-                        size=14, font_family="Vazir"),
-                ft.Text("▼", size=10, color=AppTheme.TEXT_HINT)
-            ], spacing=4, alignment=ft.MainAxisAlignment.CENTER),
-            items=[
-                ft.PopupMenuItem(
-                    content=ft.Text(persian_numbers(str(d)),
-                                    font_family="Vazir", size=14),
-                    on_click=lambda e, d=d: self._on_date_changed(day=d)
-                ) for d in days
-            ],
+        calendar_container = ft.Container(
+            content=ft.Column([
+                calendar_toolbar,
+                ft.Container(height=10),
+                weekday_header,
+                self.calendar_grid,
+            ]),
+            padding=15,
             bgcolor="#FFFFFF",
-            shape=ft.RoundedRectangleBorder(radius=10),
-            elevation=2,
-        )
-
-        # ========== PopupMenuButton ماه (بدون آیکون، با ▼) ==========
-        self.month_menu = ft.PopupMenuButton(
-            content=ft.Row([
-                ft.Text(SHAMSI_MONTHS[self.shamsi_month - 1]
-                        [1], size=14, font_family="Vazir"),
-                ft.Text("▼", size=10, color=AppTheme.TEXT_HINT)
-            ], spacing=4, alignment=ft.MainAxisAlignment.CENTER),
-            items=[
-                ft.PopupMenuItem(
-                    content=ft.Text(m[1], font_family="Vazir", size=14),
-                    on_click=lambda e, m=int(
-                        m[0]): self._on_date_changed(month=m)
-                ) for m in SHAMSI_MONTHS
-            ],
-            bgcolor="#FFFFFF",
-            shape=ft.RoundedRectangleBorder(radius=10),
-            elevation=2,
-        )
-
-        # ========== PopupMenuButton سال (بدون آیکون، با ▼) ==========
-        self.year_menu = ft.PopupMenuButton(
-            content=ft.Row([
-                ft.Text(persian_numbers(str(self.shamsi_year)),
-                        size=14, font_family="Vazir"),
-                ft.Text("▼", size=10, color=AppTheme.TEXT_HINT)
-            ], spacing=4, alignment=ft.MainAxisAlignment.CENTER),
-            items=[
-                ft.PopupMenuItem(
-                    content=ft.Text(persian_numbers(str(y)),
-                                    font_family="Vazir", size=14),
-                    on_click=lambda e, y=y: self._on_date_changed(year=y)
-                ) for y in SHAMSI_YEARS
-            ],
-            bgcolor="#FFFFFF",
-            shape=ft.RoundedRectangleBorder(radius=10),
-            elevation=2,
-        )
-
-        date_selector = ft.Container(
-            content=ft.Column(
-                [
-                    ft.Text("انتخاب تاریخ", size=13, font_family="Vazir",
-                            weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_HINT),
-                    ft.Container(height=8),
-                    ft.Row([self.day_menu, self.month_menu, self.year_menu],
-                           alignment=ft.MainAxisAlignment.CENTER, spacing=8),
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=15, bgcolor="#FFFFFF", border_radius=16,
-            border=ft.Border.all(1, "#E0E0E0"), margin=ft.Margin(0, 0, 0, 10),
-            shadow=ft.BoxShadow(
-                spread_radius=0, blur_radius=8, color="#00000010"),
+            border_radius=16,
+            border=ft.Border.all(1, "#E0E0E0"),
+            shadow=ft.BoxShadow(spread_radius=0, blur_radius=8, color="#00000010"),
+            margin=ft.Margin(0, 10, 0, 10),
         )
 
         self.prayer_card = ft.Container(
-            content=ft.Column([], spacing=8), padding=20, bgcolor="#FFFFFF",
-            border_radius=16, border=ft.Border.all(1, "#E0E0E0"),
-            shadow=ft.BoxShadow(
-                spread_radius=0, blur_radius=8, color="#00000010"),
+            content=ft.Column([], spacing=8),
+            padding=20,
+            bgcolor="#FFFFFF",
+            border_radius=16,
+            border=ft.Border.all(1, "#E0E0E0"),
+            shadow=ft.BoxShadow(spread_radius=0, blur_radius=8, color="#00000010"),
         )
 
         self.prayer_content = ft.Column(
             [
-                ft.Container(height=20), self.title_text,
-                ft.Container(height=10), ft.Container(
-                    height=1.5, width=60, bgcolor=AppTheme.SECONDARY, border_radius=1),
+                ft.Container(height=10),
+                ft.Row([
+                    ft.Icon(ft.icons.Icons.NIGHTLIGHT_ROUND, size=26, color=AppTheme.SECONDARY),
+                    ft.Text("اوقات شرعی", size=32, font_family="IranNastaliq",
+                            color=AppTheme.SECONDARY, text_align=ft.TextAlign.CENTER),
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
+                ft.Container(height=10),
+                ft.Container(height=1.5, width=60, bgcolor=AppTheme.SECONDARY, border_radius=1),
                 ft.Container(height=15),
                 ft.Container(
                     content=ft.Column([
@@ -192,17 +193,16 @@ class PrayerPage:
                                 font_family="Vazir", color=AppTheme.TEXT_HINT, text_align=ft.TextAlign.CENTER),
                     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                     padding=ft.Padding(20, 16, 20, 16), bgcolor="#F8F4E8", border_radius=12,
-                    border=ft.Border.all(1, AppTheme.SECONDARY), margin=ft.Margin(20, 0, 20, 0),
+                    border=ft.Border.all(1, AppTheme.SECONDARY), margin=ft.Margin(10, 0, 10, 0),
                 ),
-                ft.Container(height=15),
-                ft.Container(content=self.date_items, padding=10,
-                             bgcolor="#FAFAFA", border_radius=12),
                 ft.Container(height=10),
-                date_selector,
-                ft.Container(height=15), self.prayer_card, ft.Container(
-                    height=30),
+                calendar_container,
+                ft.Container(height=10),
+                self.prayer_card,
+                ft.Container(height=30),
             ],
-            alignment=ft.MainAxisAlignment.START, horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.START,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
         scrollable = ft.ListView(
@@ -215,46 +215,137 @@ class PrayerPage:
                 colors=["#0D1B0F", "#1A2F1E", "#0D1B0F"],
             ),
         )
+
+        self._build_calendar()
         self.load_times()
         return ft.Column([header, page_content], expand=True, spacing=0)
 
-    def _on_date_changed(self, day: int = None, month: int = None, year: int = None):
-        """مدیریت تغییر تاریخ از طریق PopupMenuButton"""
+    def _change_year(self, delta: int):
+        """تغییر سال"""
+        self.shamsi_year += delta
+        max_day = self._get_max_day()
+        if self.shamsi_day > max_day:
+            self.shamsi_day = max_day
 
-        if day is not None:
-            self.shamsi_day = day
-            # به‌روزرسانی متن دکمه روز
-            self.day_menu.content.controls[0].value = persian_numbers(str(day))
+        self.month_title.value = f"{MONTH_NAMES[self.shamsi_month - 1]} {persian_numbers(str(self.shamsi_year))}"
+        self._build_calendar()
+        self._on_day_selected(self.shamsi_day)
 
-        if month is not None:
-            self.shamsi_month = month
-            # به‌روزرسانی متن دکمه ماه
-            self.month_menu.content.controls[0].value = SHAMSI_MONTHS[month - 1][1]
-            # به‌روزرسانی لیست روزها هنگام تغییر ماه
-            days = get_days_in_month(self.shamsi_year, self.shamsi_month)
-            if self.shamsi_day > max(days):
-                self.shamsi_day = max(days)
-                self.day_menu.content.controls[0].value = persian_numbers(
-                    str(self.shamsi_day))
+    def _change_month(self, delta: int):
+        """تغییر ماه با دکمه‌های قبلی/بعدی"""
+        self.shamsi_month += delta
+        if self.shamsi_month > 12:
+            self.shamsi_month = 1
+            self.shamsi_year += 1
+        elif self.shamsi_month < 1:
+            self.shamsi_month = 12
+            self.shamsi_year -= 1
 
-        if year is not None:
-            self.shamsi_year = year
-            # به‌روزرسانی متن دکمه سال
-            self.year_menu.content.controls[0].value = persian_numbers(
-                str(year))
-            # بررسی تطابق روز با ماه جدید
-            days = get_days_in_month(self.shamsi_year, self.shamsi_month)
-            if self.shamsi_day > max(days):
-                self.shamsi_day = max(days)
-                self.day_menu.content.controls[0].value = persian_numbers(
-                    str(self.shamsi_day))
+        max_day = self._get_max_day()
+        if self.shamsi_day > max_day:
+            self.shamsi_day = max_day
 
+        self.month_title.value = f"{MONTH_NAMES[self.shamsi_month - 1]} {persian_numbers(str(self.shamsi_year))}"
+        self._build_calendar()
+        self._on_day_selected(self.shamsi_day)
+
+    def _go_to_today(self):
+        """برگشت به تاریخ امروز"""
+        today_jd = jdatetime.date.fromgregorian(date=date.today())
+        self.shamsi_year = today_jd.year
+        self.shamsi_month = today_jd.month
+        self.shamsi_day = today_jd.day
+
+        self.month_title.value = f"{MONTH_NAMES[self.shamsi_month - 1]} {persian_numbers(str(self.shamsi_year))}"
+        self._build_calendar()
+        self._on_day_selected(self.shamsi_day)
+
+    def _get_max_day(self):
+        """تعداد روزهای ماه جاری"""
+        if self.shamsi_month <= 6:
+            return 31
+        elif self.shamsi_month <= 11:
+            return 30
+        else:
+            try:
+                jdatetime.date(self.shamsi_year, 12, 30)
+                return 30
+            except:
+                return 29
+
+    def _build_calendar(self):
+        """ساخت جدول روزهای ماه با تم مذهبی"""
+        self.calendar_grid.controls.clear()
+        today_jd = jdatetime.date.fromgregorian(date=date.today())
+
+        first_day_jd = jdatetime.date(self.shamsi_year, self.shamsi_month, 1)
+        first_weekday = first_day_jd.weekday()  # 0=شنبه, 6=جمعه
+
+        # خانه‌های خالی قبل از اولین روز
+        for _ in range(first_weekday):
+            self.calendar_grid.controls.append(ft.Container())
+
+        max_day = self._get_max_day()
+        for d in range(1, max_day + 1):
+            is_today = (self.shamsi_year == today_jd.year and
+                        self.shamsi_month == today_jd.month and
+                        d == today_jd.day)
+            is_selected = (d == self.shamsi_day)
+
+            # محاسبه روز هفته برای تشخیص جمعه
+            day_jd = jdatetime.date(self.shamsi_year, self.shamsi_month, d)
+            is_friday = (day_jd.weekday() == 6)
+
+            # تعیین رنگ با تم مذهبی
+            if is_today and is_selected:
+                bg = AppTheme.SECONDARY       # طلایی
+                text_color = "#0D1B0F"        # سبز تیره
+                weight = ft.FontWeight.BOLD
+            elif is_today:
+                bg = "#FFF8E1"                # طلایی کمرنگ
+                text_color = AppTheme.SECONDARY  # طلایی
+                weight = ft.FontWeight.BOLD
+            elif is_selected:
+                bg = "#1A2F1E"                # سبز تیره
+                text_color = AppTheme.SECONDARY  # طلایی
+                weight = ft.FontWeight.BOLD
+            elif is_friday:
+                bg = "#FFFFFF"                # سفید
+                text_color = "#D4AF37"        # طلایی (روز عید)
+                weight = ft.FontWeight.BOLD
+            else:
+                bg = "#FFFFFF"                # سفید
+                text_color = "#1A2F1E"        # سبز تیره
+                weight = ft.FontWeight.NORMAL
+
+            self.calendar_grid.controls.append(
+                ft.Container(
+                    content=ft.Text(
+                        persian_numbers(str(d)),
+                        size=14,
+                        font_family="Vazir",
+                        weight=weight,
+                        color=text_color,
+                    ),
+                    width=42,
+                    height=42,
+                    bgcolor=bg,
+                    border_radius=21,
+                    alignment=ft.Alignment(0, 0),
+                    on_click=lambda e, day=d: self._on_day_selected(day),
+                )
+            )
+
+        self.page.update()
+
+    def _on_day_selected(self, day: int):
+        """وقتی کاربر روی یک روز کلیک می‌کند"""
+        self.shamsi_day = day
         try:
-            jd = jdatetime.date(
-                self.shamsi_year, self.shamsi_month, self.shamsi_day)
+            jd = jdatetime.date(self.shamsi_year, self.shamsi_month, day)
             self.selected_date = jd.togregorian()
+            self._build_calendar()
             self.load_times()
-            self.page.update()
         except Exception as e:
             print("Date conversion error:", e)
 
@@ -265,78 +356,42 @@ class PrayerPage:
         )
         pt = calc.fetch_prayer_times()
 
-        hijri = pt.get("date", {}).get("hijri", {})
-        gregorian = pt.get("date", {}).get("gregorian", {})
-
-        date_items_list = []
-
-        shamsi = self._format_shamsi(self.selected_date)
-        date_items_list.append(
-            ft.Row([ft.Icon(ft.icons.Icons.CALENDAR_MONTH, size=18, color="#1565C0"),
-                    ft.Text(persian_numbers(shamsi), size=15, font_family="Vazir", weight=ft.FontWeight.BOLD, color="#1565C0")], spacing=8)
-        )
-
-        if gregorian:
-            day = persian_numbers(gregorian.get("day", ""))
-            month = gregorian.get("month", {}).get("en", "")
-            year = persian_numbers(gregorian.get("year", ""))
-            date_items_list.append(
-                ft.Row([ft.Icon(ft.icons.Icons.TODAY, size=18, color="#00897B"),
-                        ft.Text(f"{day} {month} {year}", size=14, font_family="Vazir", color="#00897B")], spacing=8)
-            )
-
-        if hijri:
-            day = persian_numbers(hijri.get("day", ""))
-            month = hijri.get("month", {}).get("ar", "")
-            year = persian_numbers(hijri.get("year", ""))
-            date_items_list.append(
-                ft.Row([ft.Icon(ft.icons.Icons.NIGHTLIGHT, size=18, color="#8E24AA"),
-                        ft.Text(f"{day} {month} {year}", size=15, font_family="Vazir", color="#8E24AA")], spacing=8)
-            )
-
-        self.date_items.controls = date_items_list
-
         prayer_rows = []
         for key, name in PRAYER_NAMES.items():
             time_str = iso_to_time(pt.get(key, "--:--"))
-            prayer_rows.append(self._build_prayer_row(
-                name, time_str, key.lower()))
+            prayer_rows.append(self._build_prayer_row(name, time_str, key.lower()))
 
         self.prayer_card.content.controls = prayer_rows
-
-        if self.selected_date == date.today():
-            self.title_text.controls[1].value = "اوقات شرعی امروز"
-        else:
-            self.title_text.controls[
-                1].value = f"اوقات شرعی {persian_numbers(self._format_shamsi(self.selected_date))}"
         self.page.update()
 
     def _build_prayer_row(self, name: str, time: str, key: str):
-        colors = {"fajr": "#1565C0", "sunrise": "#FF8F00", "dhuhr": "#FFB300",
-                  "asr": "#F4511E", "maghrib": "#6A1B9A", "isha": "#1B5E20"}
-        icons = {"fajr": ft.icons.Icons.DARK_MODE, "sunrise": ft.icons.Icons.WB_TWILIGHT, "dhuhr": ft.icons.Icons.WB_SUNNY,
-                 "asr": ft.icons.Icons.FILTER_VINTAGE, "maghrib": ft.icons.Icons.NIGHTLIGHT, "isha": ft.icons.Icons.DARK_MODE_OUTLINED}
+        colors = {
+            "fajr": "#1565C0", "sunrise": "#FF8F00", "dhuhr": "#FFB300",
+            "asr": "#F4511E", "maghrib": "#6A1B9A", "isha": "#1B5E20"
+        }
+        icons = {
+            "fajr": ft.icons.Icons.DARK_MODE, "sunrise": ft.icons.Icons.WB_TWILIGHT,
+            "dhuhr": ft.icons.Icons.WB_SUNNY, "asr": ft.icons.Icons.FILTER_VINTAGE,
+            "maghrib": ft.icons.Icons.NIGHTLIGHT, "isha": ft.icons.Icons.DARK_MODE_OUTLINED
+        }
         color = colors.get(key, AppTheme.PRIMARY)
         icon = icons.get(key, ft.icons.Icons.ACCESS_TIME)
 
         return ft.Container(
-            content=ft.Row([ft.Icon(icon, size=22, color=color),
-                            ft.Text(name, size=15, font_family="Vazir",
-                                    weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
-                            ft.Container(expand=True),
-                            ft.Text(persian_numbers(time), size=16, font_family="Vazir", weight=ft.FontWeight.BOLD, color=color)],
-                           alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-            padding=ft.Padding(15, 12, 15, 12), bgcolor="#FAFAFA", border_radius=12, border=ft.Border.all(1, "#E0E0E0"),
+            content=ft.Row([
+                ft.Icon(icon, size=22, color=color),
+                ft.Text(name, size=15, font_family="Vazir",
+                        weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
+                ft.Container(expand=True),
+                ft.Text(persian_numbers(time), size=16, font_family="Vazir",
+                        weight=ft.FontWeight.BOLD, color=color),
+            ], alignment=ft.MainAxisAlignment.START,
+               vertical_alignment=ft.CrossAxisAlignment.CENTER),
+            padding=ft.Padding(15, 12, 15, 12),
+            bgcolor="#FAFAFA",
+            border_radius=12,
+            border=ft.Border.all(1, "#E0E0E0"),
         )
-
-    def _format_shamsi(self, d: date) -> str:
-        try:
-            jd = jdatetime.date.fromgregorian(date=d)
-            months = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد",
-                      "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"]
-            return f"{jd.day} {months[jd.month - 1]} {jd.year}"
-        except:
-            return str(d)
 
     def go_back(self, e):
         self.on_back()

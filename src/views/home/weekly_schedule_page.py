@@ -178,10 +178,10 @@ class WeeklySchedulePage:
         lecturer = program.get("lecturer", "")
 
         time_str = ""
-        if time_start:
-            time_str = persian_numbers(time_start[:5])
         if time_end:
-            time_str += f" - {persian_numbers(time_end[:5])}"
+            time_str = persian_numbers(time_end[:5])
+        if time_start:
+            time_str += f" - {persian_numbers(time_start[:5])}"
 
         content_col = ft.Column([], expand=True)
 
