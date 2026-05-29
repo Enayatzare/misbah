@@ -49,7 +49,11 @@ class ManageDuas:
             begin=ft.Alignment(0, -1), end=ft.Alignment(0, 1), colors=["#0D1B0F", "#1A2F1E", "#0D1B0F"]))
         self.load_duas()
 
-        self.page.on_pop = lambda e: self.go_back(e)
+        def handle_back(e: ft.KeyboardEvent):
+            if e.key in ["Escape", "Back", "GoBack", "ArrowLeft"]:
+                self.go_back(e)
+        
+        self.page.on_keyboard_event = handle_back
         return ft.Column([header, page_content], expand=True, spacing=0)
 
     def load_duas(self):
