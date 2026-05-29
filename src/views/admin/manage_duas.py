@@ -14,6 +14,8 @@ class ManageDuas:
         self.on_back = on_back
         self.all_duas = []
 
+        self.page.on_pop = lambda e: self.go_back(e)
+
     def _is_quran(self, title: str) -> bool:
         quran_words = ["سوره", "آیات", "آیت", "قرآن", "الرحمن", "انفال",
                        "دخان", "فتح", "حشر", "واقعه", "یس", "یاسین", "ذاریات"]

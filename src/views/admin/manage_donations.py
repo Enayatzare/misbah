@@ -20,6 +20,8 @@ class ManageDonations:
         self.per_page = 10
         self.current_tab = "donations"
 
+        self.page.on_pop = lambda e: self.go_back(e)
+
     def build(self):
         header = ft.Container(
             content=ft.Row(

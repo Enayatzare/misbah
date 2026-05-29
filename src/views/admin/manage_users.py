@@ -15,6 +15,8 @@ class ManageUsers:
         self.per_page = 20
         self.current_tab = "all"
 
+        self.page.on_pop = lambda e: self.go_back(e)
+
     def build(self):
         header = ft.Container(
             content=ft.Row(

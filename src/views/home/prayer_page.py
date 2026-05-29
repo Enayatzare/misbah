@@ -49,6 +49,8 @@ class PrayerPage:
         self.shamsi_month = today_jd.month
         self.shamsi_day = today_jd.day
 
+        self.page.on_pop = lambda e: self.go_back(e)
+
     def build(self):
         header = ft.Container(
             content=ft.Row(

@@ -10,6 +10,8 @@ class DuasPage:
         self.on_back = on_back
         self.all_duas = []  # ذخیره همه ادعیه برای فیلتر شدن
 
+        self.page.on_pop = lambda e: self.go_back(e)
+
     def build(self):
         header = ft.Container(
             content=ft.Row(

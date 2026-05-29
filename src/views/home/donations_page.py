@@ -19,6 +19,8 @@ class DonationsPage:
         self.on_back = on_back
         self.user = user
 
+        self.page.on_pop = lambda e: self.go_back(e)
+
     def build(self):
         header = ft.Container(
             content=ft.Row(

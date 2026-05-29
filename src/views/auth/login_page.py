@@ -1,11 +1,10 @@
 import flet as ft
 import os
-import json  # برای کار با فایل JSON اضافه شد
+import json
 from src.theme import AppTheme
 from src.services.api_client import api
 
 # دریافت مسیر امن ذخیره‌سازی داده‌های برنامه
-# این مسیر در سیستم‌عامل‌های مختلف (ویندوز، اندروید و...) معتبر و خصوصی است
 APP_STORAGE_DIR = os.environ.get("FLET_APP_STORAGE_DATA", ".")
 
 # مسیر کامل فایل ذخیره‌سازی اطلاعات ورود
@@ -163,6 +162,27 @@ class LoginPage:
             padding=ft.Padding(30, 5, 30, 10), bgcolor="#FFFFFFF2", border_radius=20,
             shadow=ft.BoxShadow(spread_radius=0, blur_radius=25, color="#00000030"), width=350,
         )
+
+        # هشدار VPN برای کاربران جدید (فقط یک بار نمایش داده می‌شود)
+        if not os.path.exists(SAVED_LOGIN_FILE):
+            snack = ft.SnackBar(
+                content=ft.Row([
+                    ft.Icon(ft.icons.Icons.WARNING_AMBER, color="#D4AF37", size=20),
+                    ft.Text(
+                        "کاربر گرامی؛ پیش از ورود/ثبت‌نام از خاموش بودن VPN خود اطمینان حاصل نمایید.",
+                        size=12,
+                        font_family="Vazir",
+                        color="#5D4037",
+                    ),
+                ]),
+                bgcolor="#FFF8E1",
+                duration=8000,
+                show_close_icon=True,
+                close_icon_color="#ddbb00"
+            )
+            self.page.overlay.append(snack)
+            snack.open = True
+            self.page.update()
 
         return ft.Stack(
             [background, ft.Container(
