@@ -20,7 +20,7 @@ class ManageDonations:
         self.per_page = 10
         self.current_tab = "donations"
 
-        self.page.on_pop = lambda e: self.go_back(e)
+        
 
     def build(self):
         header = ft.Container(
@@ -52,6 +52,8 @@ class ManageDonations:
                 0, -1), end=ft.Alignment(0, 1), colors=["#0D1B0F", "#1A2F1E", "#0D1B0F"]),
         )
         self.load_data()
+
+        self.page.on_pop = lambda e: self.go_back(e)
         return ft.Column([header, page_content], expand=True, spacing=0)
 
     def load_data(self):

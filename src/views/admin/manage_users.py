@@ -15,7 +15,7 @@ class ManageUsers:
         self.per_page = 20
         self.current_tab = "all"
 
-        self.page.on_pop = lambda e: self.go_back(e)
+        
 
     def build(self):
         header = ft.Container(
@@ -44,6 +44,8 @@ class ManageUsers:
         page_content = ft.Container(content=scrollable, expand=True, gradient=ft.LinearGradient(
             begin=ft.Alignment(0, -1), end=ft.Alignment(0, 1), colors=["#0D1B0F", "#1A2F1E", "#0D1B0F"]))
         self.load_users()
+
+        self.page.on_pop = lambda e: self.go_back(e)
         return ft.Column([header, page_content], expand=True, spacing=0)
 
     def load_users(self):

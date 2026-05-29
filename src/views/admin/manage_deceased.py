@@ -13,7 +13,7 @@ class ManageDeceased:
         self.on_back = on_back
         self.all_items = []
 
-        self.page.on_pop = lambda e: self.go_back(e)
+        
 
     def build(self):
         header = ft.Container(
@@ -42,6 +42,8 @@ class ManageDeceased:
         page_content = ft.Container(content=scrollable, expand=True, gradient=ft.LinearGradient(
             begin=ft.Alignment(0, -1), end=ft.Alignment(0, 1), colors=["#0D1B0F", "#1A2F1E", "#0D1B0F"]))
         self.load_data()
+
+        self.page.on_pop = lambda e: self.go_back(e)
         return ft.Column([header, page_content], expand=True, spacing=0)
 
     def load_data(self):

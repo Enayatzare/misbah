@@ -14,7 +14,7 @@ class ManageAnnouncements:
         self.on_back = on_back
         self.all_announcements = []
 
-        self.page.on_pop = lambda e: self.go_back(e)
+        
 
     def build(self):
         header = ft.Container(
@@ -58,6 +58,8 @@ class ManageAnnouncements:
         )
 
         self.load_announcements()
+
+        self.page.on_pop = lambda e: self.go_back(e)
         return ft.Column([header, page_content], expand=True, spacing=0)
 
     def load_announcements(self):

@@ -8,7 +8,7 @@ class DeceasedPage:
         self.page = page
         self.on_back = on_back
 
-        self.page.on_pop = lambda e: self.go_back(e)
+        
 
     def build(self):
         header = ft.Container(
@@ -46,6 +46,8 @@ class DeceasedPage:
         )
 
         self.load_deceased()
+
+        self.page.on_pop = lambda e: self.go_back(e)
         return ft.Column([header, page_content], expand=True, spacing=0)
 
     def load_deceased(self):

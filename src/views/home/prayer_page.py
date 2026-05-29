@@ -49,7 +49,7 @@ class PrayerPage:
         self.shamsi_month = today_jd.month
         self.shamsi_day = today_jd.day
 
-        self.page.on_pop = lambda e: self.go_back(e)
+        
 
     def build(self):
         header = ft.Container(
@@ -220,6 +220,8 @@ class PrayerPage:
 
         self._build_calendar()
         self.load_times()
+        
+        self.page.on_pop = lambda e: self.go_back(e)
         return ft.Column([header, page_content], expand=True, spacing=0)
 
     def _change_year(self, delta: int):
