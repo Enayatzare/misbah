@@ -313,13 +313,13 @@ class TasbihPage:
                 self.target = 33
                 self.dhikr_text = "الحمدلله"
                 self.current_count = 0
-                self._show_snack("مرحله ۱ کامل! اکنون ۳۳ مرتبه الحمدلله")
+                self._show_snack(f"مرحله {persian_numbers('1')} کامل! اکنون {persian_numbers('33')} مرتبه الحمدلله")
             elif self.stage == 2:
                 self.stage = 3
                 self.target = 33
                 self.dhikr_text = "سبحان الله"
                 self.current_count = 0
-                self._show_snack("مرحله ۲ کامل! اکنون ۳۳ مرتبه سبحان الله")
+                self._show_snack(f"مرحله {persian_numbers('2')} کامل! اکنون {persian_numbers('33')} مرتبه سبحان الله")
             else:
                 self.is_active = False
                 self._show_snack("✅ تسبیحات حضرت زهرا (س) کامل شد 🤲")
@@ -330,7 +330,7 @@ class TasbihPage:
                 self.target = 10
                 self.dhikr_text = texts[self.stage - 1]
                 self.current_count = 0
-                self._show_snack(f"مرحله {self.stage} از ۴: {self.dhikr_text}")
+                self._show_snack(f"مرحله {persian_numbers(str(self.stage))} از {persian_numbers('4')}: {self.dhikr_text}")
             else:
                 self.is_active = False
                 self._show_snack("✅ تسبیحات امیرالمؤمنین (ع) کامل شد 🤲")
@@ -367,7 +367,7 @@ class TasbihPage:
     def _show_settings_dialog(self):
         target_field = ft.TextField(
             label="تعداد هدف",
-            value=str(self.target),
+            value=persian_numbers(str(self.target)),
             keyboard_type=ft.KeyboardType.NUMBER,
             border_color=GOLD_SOFT,
             focused_border_color=GOLD_SOFT,
