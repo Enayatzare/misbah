@@ -331,7 +331,7 @@ class DonationsPage:
                         card_content.append(ft.Container(height=4))
                         card_content.append(
                             ft.Row([
-                                ft.Text("🏛 واریز به صندوق مسجد:", size=11, font_family="Vazir",
+                                ft.Text("🕌 واریز به صندوق مسجد:", size=11, font_family="Vazir",
                                         color=AppTheme.SECONDARY),
                                 ft.Container(expand=True),
                                 ft.Text(f"{persian_numbers(f'{int(extra_amount):,}')} تومان", size=12,

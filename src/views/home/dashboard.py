@@ -127,6 +127,22 @@ class Dashboard:
             padding=ft.Padding(20, 35, 20, 15), bgcolor="#0D1B0F", border_radius=ft.BorderRadius(0, 0, 25, 25),
         )
 
+        # کارت مخصوص ذکر شمار (با ایموجی)
+        tasbih_card = ft.Container(
+            content=ft.Column([
+                ft.Text("📿", size=36, text_align=ft.TextAlign.CENTER),
+                ft.Container(height=8),
+                ft.Text("ذکر شمار", size=13, font_family="Vazir", weight=ft.FontWeight.BOLD,
+                        color=AppTheme.TEXT_PRIMARY, text_align=ft.TextAlign.CENTER)
+            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            bgcolor="#C8E6C9",  # سبز کمرنگ
+            border_radius=16,
+            border=ft.Border.all(2.5, "#D4AF37"),
+            padding=15,
+            shadow=ft.BoxShadow(spread_radius=0, blur_radius=10, color="#00000010"),
+            on_click=self.show_tasbih,
+        )
+
         cards = ft.GridView(
             expand=True, runs_count=2, spacing=12, run_spacing=12, padding=20,
             controls=[
@@ -142,6 +158,7 @@ class Dashboard:
                                  "#EF6C00", "#FFE0B2", self.show_donations),
                 self._build_card("آگهی ترحیم", ft.icons.Icons.FLAG,
                                  "#616161", "#E0E0E0", self.show_deceased),
+                tasbih_card,  # کارت ذکر شمار
             ],
         )
         if self.user.get("role") in ["admin", "super_admin"]:
@@ -293,6 +310,17 @@ class Dashboard:
         self.page.add(DeceasedPage(self.page, on_back).build())
         self.page.update()
 
+    def show_tasbih(self, e):
+        from src.views.home.tasbih_page import TasbihPage
+        def on_back(): 
+            self.page.clean()
+            self.page.add(self.build())
+            self.page.update()
+        self.page.clean()
+        self.page.add(TasbihPage(self.page, on_back).build())
+        self.page.update()
+        
+
     def show_admin_panel(self, e):
         from src.views.admin.admin_panel import AdminPanel
         def on_back(): self.page.clean(); self.page.add(self.build()); self.page.update()
@@ -373,7 +401,7 @@ class Dashboard:
                     status_text = "❌ رد شده"
                     status_color = "#EF5350"
                 elif status == "rejected_general":
-                    status_text = "🏛 صندوق مسجد"
+                    status_text = "🕌 صندوق مسجد"
                     status_color = "#D4AF37"
                 else:
                     status_text = "⏳ در انتظار"

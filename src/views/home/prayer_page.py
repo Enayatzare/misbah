@@ -19,7 +19,6 @@ PRAYER_NAMES = {
     "Isha": "عشاء",
 }
 
-# سرستون‌ها: از راست به چپ = شنبه تا جمعه
 WEEKDAYS = ["ش", "ی", "د", "س", "چ", "پ", "ج"]
 MONTH_NAMES = [
     "فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد",
@@ -49,8 +48,6 @@ class PrayerPage:
         self.shamsi_month = today_jd.month
         self.shamsi_day = today_jd.day
 
-        
-
     def build(self):
         header = ft.Container(
             content=ft.Row(
@@ -68,7 +65,6 @@ class PrayerPage:
             border_radius=ft.BorderRadius(0, 0, 20, 20),
         )
 
-        # عنوان ماه و سال
         self.month_title = ft.Text(
             f"{MONTH_NAMES[self.shamsi_month - 1]} {persian_numbers(str(self.shamsi_year))}",
             size=20,
@@ -78,33 +74,12 @@ class PrayerPage:
             text_align=ft.TextAlign.CENTER,
         )
 
-        # سرستون روزهای هفته
-        weekday_header = ft.Row(
-            [
-                ft.Container(
-                    content=ft.Text(day, size=12, font_family="Vazir",
-                                    weight=ft.FontWeight.BOLD,
-                                    color="#D4AF37" if day == "ج" else AppTheme.TEXT_HINT),
-                    width=42, height=35,
-                    alignment=ft.Alignment(0, 0),
-                ) for day in WEEKDAYS
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+        self.calendar_row = ft.Row(
+            spacing=0,
+            alignment=ft.MainAxisAlignment.CENTER,
         )
 
-        # جدول روزهای ماه
-        self.calendar_grid = ft.GridView(
-            expand=False,
-            runs_count=7,
-            spacing=3,
-            run_spacing=4,
-            max_extent=46,
-            height=320,
-        )
-
-        # نوار ابزار تقویم: سال، ماه، دکمه امروز
         calendar_toolbar = ft.Column([
-            # ردیف اول: تغییر سال + عنوان ماه
             ft.Row([
                 ft.IconButton(
                     icon=ft.icons.Icons.KEYBOARD_DOUBLE_ARROW_RIGHT,
@@ -135,7 +110,6 @@ class PrayerPage:
                 ),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             ft.Container(height=5),
-            # ردیف دوم: دکمه امروز
             ft.Row([
                 ft.Container(expand=True),
                 ft.Container(
@@ -155,10 +129,9 @@ class PrayerPage:
             content=ft.Column([
                 calendar_toolbar,
                 ft.Container(height=10),
-                weekday_header,
-                self.calendar_grid,
+                self.calendar_row,
             ]),
-            padding=15,
+            padding=12,
             bgcolor="#FFFFFF",
             border_radius=16,
             border=ft.Border.all(1, "#E0E0E0"),
@@ -229,18 +202,15 @@ class PrayerPage:
         return ft.Column([header, page_content], expand=True, spacing=0)
 
     def _change_year(self, delta: int):
-        """تغییر سال"""
         self.shamsi_year += delta
         max_day = self._get_max_day()
         if self.shamsi_day > max_day:
             self.shamsi_day = max_day
-
         self.month_title.value = f"{MONTH_NAMES[self.shamsi_month - 1]} {persian_numbers(str(self.shamsi_year))}"
         self._build_calendar()
         self._on_day_selected(self.shamsi_day)
 
     def _change_month(self, delta: int):
-        """تغییر ماه با دکمه‌های قبلی/بعدی"""
         self.shamsi_month += delta
         if self.shamsi_month > 12:
             self.shamsi_month = 1
@@ -248,28 +218,23 @@ class PrayerPage:
         elif self.shamsi_month < 1:
             self.shamsi_month = 12
             self.shamsi_year -= 1
-
         max_day = self._get_max_day()
         if self.shamsi_day > max_day:
             self.shamsi_day = max_day
-
         self.month_title.value = f"{MONTH_NAMES[self.shamsi_month - 1]} {persian_numbers(str(self.shamsi_year))}"
         self._build_calendar()
         self._on_day_selected(self.shamsi_day)
 
     def _go_to_today(self):
-        """برگشت به تاریخ امروز"""
         today_jd = jdatetime.date.fromgregorian(date=date.today())
         self.shamsi_year = today_jd.year
         self.shamsi_month = today_jd.month
         self.shamsi_day = today_jd.day
-
         self.month_title.value = f"{MONTH_NAMES[self.shamsi_month - 1]} {persian_numbers(str(self.shamsi_year))}"
         self._build_calendar()
         self._on_day_selected(self.shamsi_day)
 
     def _get_max_day(self):
-        """تعداد روزهای ماه جاری"""
         if self.shamsi_month <= 6:
             return 31
         elif self.shamsi_month <= 11:
@@ -282,72 +247,111 @@ class PrayerPage:
                 return 29
 
     def _build_calendar(self):
-        """ساخت جدول روزهای ماه با تم مذهبی"""
-        self.calendar_grid.controls.clear()
+        """ساخت تقویم با Row و Column - همه ستون‌ها هم‌ارتفاع"""
+        self.calendar_row.controls.clear()
         today_jd = jdatetime.date.fromgregorian(date=date.today())
 
         first_day_jd = jdatetime.date(self.shamsi_year, self.shamsi_month, 1)
-        first_weekday = first_day_jd.weekday()  # 0=شنبه, 6=جمعه
-
-        # خانه‌های خالی قبل از اولین روز
-        for _ in range(first_weekday):
-            self.calendar_grid.controls.append(ft.Container())
-
+        first_weekday = first_day_jd.weekday()
         max_day = self._get_max_day()
+
+        columns_data = [[] for _ in range(7)]
+        
+        for i in range(first_weekday):
+            columns_data[i].append(None)
+        
         for d in range(1, max_day + 1):
-            is_today = (self.shamsi_year == today_jd.year and
-                        self.shamsi_month == today_jd.month and
-                        d == today_jd.day)
-            is_selected = (d == self.shamsi_day)
+            col = (first_weekday + d - 1) % 7
+            columns_data[col].append(d)
 
-            # محاسبه روز هفته برای تشخیص جمعه
-            day_jd = jdatetime.date(self.shamsi_year, self.shamsi_month, d)
-            is_friday = (day_jd.weekday() == 6)
+        max_len = max(len(col) for col in columns_data)
+        for col in columns_data:
+            while len(col) < max_len:
+                col.append(None)
 
-            # تعیین رنگ با تم مذهبی
-            if is_today and is_selected:
-                bg = AppTheme.SECONDARY       # طلایی
-                text_color = "#0D1B0F"        # سبز تیره
-                weight = ft.FontWeight.BOLD
-            elif is_today:
-                bg = "#FFF8E1"                # طلایی کمرنگ
-                text_color = AppTheme.SECONDARY  # طلایی
-                weight = ft.FontWeight.BOLD
-            elif is_selected:
-                bg = "#1A2F1E"                # سبز تیره
-                text_color = AppTheme.SECONDARY  # طلایی
-                weight = ft.FontWeight.BOLD
-            elif is_friday:
-                bg = "#FFFFFF"                # سفید
-                text_color = "#D4AF37"        # طلایی (روز عید)
-                weight = ft.FontWeight.BOLD
-            else:
-                bg = "#FFFFFF"                # سفید
-                text_color = "#1A2F1E"        # سبز تیره
-                weight = ft.FontWeight.NORMAL
-
-            self.calendar_grid.controls.append(
+        for col_idx in range(7):
+            col_controls = []
+            
+            is_friday_col = (col_idx == 6)
+            header_color = "#D4AF37" if is_friday_col else AppTheme.TEXT_HINT
+            col_controls.append(
                 ft.Container(
                     content=ft.Text(
-                        persian_numbers(str(d)),
-                        size=14,
+                        WEEKDAYS[col_idx],
+                        size=16,
                         font_family="Vazir",
-                        weight=weight,
-                        color=text_color,
+                        weight=ft.FontWeight.BOLD,
+                        color=header_color,
+                        text_align=ft.TextAlign.CENTER,
                     ),
-                    width=42,
-                    height=42,
-                    bgcolor=bg,
-                    border_radius=21,
+                    width=44,
+                    height=40,
                     alignment=ft.Alignment(0, 0),
-                    on_click=lambda e, day=d: self._on_day_selected(day),
+                )
+            )
+            
+            for day in columns_data[col_idx]:
+                if day is None:
+                    col_controls.append(ft.Container(width=44, height=44))
+                else:
+                    is_today = (self.shamsi_year == today_jd.year and
+                                self.shamsi_month == today_jd.month and
+                                day == today_jd.day)
+                    is_selected = (day == self.shamsi_day)
+                    is_friday = (col_idx == 6)
+
+                    if is_today and is_selected:
+                        bg = AppTheme.SECONDARY
+                        text_color = "#0D1B0F"
+                        weight = ft.FontWeight.BOLD
+                    elif is_today:
+                        bg = "#FFF8E1"
+                        text_color = AppTheme.SECONDARY
+                        weight = ft.FontWeight.BOLD
+                    elif is_selected:
+                        bg = "#1A2F1E"
+                        text_color = AppTheme.SECONDARY
+                        weight = ft.FontWeight.BOLD
+                    elif is_friday:
+                        bg = "#FFFFFF"
+                        text_color = "#D4AF37"
+                        weight = ft.FontWeight.BOLD
+                    else:
+                        bg = "#FFFFFF"
+                        text_color = "#1A2F1E"
+                        weight = ft.FontWeight.NORMAL
+
+                    col_controls.append(
+                        ft.Container(
+                            content=ft.Text(
+                                persian_numbers(str(day)),
+                                size=18,
+                                font_family="Vazir",
+                                weight=weight,
+                                color=text_color,
+                                text_align=ft.TextAlign.CENTER,
+                            ),
+                            width=44,
+                            height=44,
+                            bgcolor=bg,
+                            border_radius=22,
+                            alignment=ft.Alignment(0, 0),
+                            on_click=lambda e, day=day: self._on_day_selected(day),
+                        )
+                    )
+            
+            self.calendar_row.controls.append(
+                ft.Column(
+                    col_controls,
+                    spacing=3,
+                    alignment=ft.MainAxisAlignment.START,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 )
             )
 
         self.page.update()
 
     def _on_day_selected(self, day: int):
-        """وقتی کاربر روی یک روز کلیک می‌کند"""
         self.shamsi_day = day
         try:
             jd = jdatetime.date(self.shamsi_year, self.shamsi_month, day)
