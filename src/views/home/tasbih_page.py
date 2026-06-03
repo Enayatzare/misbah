@@ -23,7 +23,6 @@ CUSTOM_DHIKRS = [
     "اَمَّن یجیبُ المُضطرَّ اِذا دَعاهُ و یکشِفُ السُّوءَ",
     "اِنّی ظَلَمْتُ نَفسْی فَاغْفِرلی",
     "یا ذالجَلال وَالاکرام",
-    "سایر",
 ]
 
 CHIP_DATA = [
@@ -45,7 +44,7 @@ class TasbihPage:
         self.target = 34
         self.dhikr_text = "الله اکبر"
         self.is_active = True
-        self.custom_dhikr = "لا حول و لا قوه الا بالله"
+        self.custom_dhikr = CUSTOM_DHIKRS[0]
 
         self._load_state()
 
@@ -174,7 +173,6 @@ class TasbihPage:
             "#EF535040" if not self.is_active else "#FFFFFF08",
         )
 
-        # دکمه چرخ‌دنده فقط برای non-custom
         controls = [
             self._build_glass_btn(ft.icons.Icons.REFRESH, "بازنشانی", self._reset, "#FFFFFF08"),
             self.stop_btn,
@@ -204,7 +202,6 @@ class TasbihPage:
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
-        # اسکرول عمودی
         scrollable = ft.ListView(
             controls=[content_col],
             expand=True,
@@ -373,15 +370,14 @@ class TasbihPage:
             focused_border_color=GOLD_SOFT,
             bgcolor=BG_DARK,
             border_radius=10,
-            color="#FFFFFF60",
+            color="#FFFFFF",
         )
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
         dlg_content = [target_field, ft.Container(height=10)]
 
         if self.dhikr_type == "custom":
-            is_other = (self.custom_dhikr not in CUSTOM_DHIKRS[:-1])
-            dd_value = self.custom_dhikr if self.custom_dhikr in CUSTOM_DHIKRS else "سایر"
+            dd_value = self.custom_dhikr if self.custom_dhikr in CUSTOM_DHIKRS else CUSTOM_DHIKRS[0]
 
             dhikr_dd = ft.Dropdown(
                 label="انتخاب ذکر",
@@ -389,9 +385,9 @@ class TasbihPage:
                 options=[ft.dropdown.Option(d) for d in CUSTOM_DHIKRS],
                 border_color=GOLD_SOFT,
                 focused_border_color=GOLD_SOFT,
-                bgcolor="#FFFDE7", 
+                bgcolor="#FFFDE7",
                 border_radius=10,
-                color="#FFFFFF60",
+                color="#4E342E",
                 text_style=ft.TextStyle(size=12, font_family="Vazir"),
             )
             dlg_content.append(dhikr_dd)
@@ -409,7 +405,7 @@ class TasbihPage:
 
             custom_field = ft.TextField(
                 hint_text="ذکر مورد نظر را وارد کنید",
-                value=self.custom_dhikr if is_other else "",
+                value="" if self.custom_dhikr in CUSTOM_DHIKRS else self.custom_dhikr,
                 border_color=GOLD_SOFT,
                 focused_border_color=GOLD_SOFT,
                 bgcolor=BG_DARK,
@@ -429,10 +425,10 @@ class TasbihPage:
                     if self.dhikr_type == "custom":
                         if custom_field.value:
                             self.custom_dhikr = custom_field.value
-                        elif dhikr_dd.value and dhikr_dd.value != "سایر":
+                        elif dhikr_dd.value:
                             self.custom_dhikr = dhikr_dd.value
                         else:
-                            self.custom_dhikr = "لا حول و لا قوه الا بالله"
+                            self.custom_dhikr = CUSTOM_DHIKRS[0]
                         self.dhikr_text = self.custom_dhikr
                     self.current_count = 0
                     self._update_ui()
@@ -517,7 +513,7 @@ class TasbihPage:
                     self.target = data.get("target", 34)
                     self.dhikr_text = data.get("dhikr_text", "الله اکبر")
                     self.is_active = data.get("is_active", True)
-                    self.custom_dhikr = data.get("custom_dhikr", "لا حول و لا قوه الا بالله")
+                    self.custom_dhikr = data.get("custom_dhikr", CUSTOM_DHIKRS[0])
         except:
             pass
 

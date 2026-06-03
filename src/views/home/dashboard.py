@@ -366,10 +366,10 @@ class Dashboard:
                     weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER, color="#FFFFFF"),
             ft.Text(self.user.get("phone", ""), size=14, font_family="Vazir",
                     text_align=ft.TextAlign.CENTER, color="#FFFFFF80"),
-            ft.Text(self.user.get("role", "user"), size=12, font_family="Vazir",
+            ft.Text("مدیر سیستم" if self.user.get("role") == "super_admin" else "مدیر" if self.user.get("role") == "admin" else "کاربر", size=12, font_family="Vazir",
                     text_align=ft.TextAlign.CENTER, color="#FFFFFF60"),
             ft.Container(height=15),
-            ft.Text("برای ویرایش اطلاعات با مدیر تماس بگیرید", size=11,
+            ft.Text("جهت ویرایش اطلاعات، با مدیر سیستم تماس بگیرید", size=11,
                     font_family="Vazir", color="#FFFFFF40", text_align=ft.TextAlign.CENTER),
             ft.Container(height=10),
         ], width=260, horizontal_alignment=ft.CrossAxisAlignment.CENTER), actions=[ft.TextButton("بستن", on_click=close, style=ft.ButtonStyle(color=AppTheme.SECONDARY))])
