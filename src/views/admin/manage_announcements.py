@@ -1,6 +1,6 @@
 # ==========================================
 # 📁 فایل: src/views/admin/manage_announcements.py
-# (نسخه اصلاح شده - دیالوگ‌های اسکرول‌دار)
+# (نسخه اصلاح شده - RTL با text_align، نمایش راست‌چین کارت‌ها)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -13,8 +13,6 @@ class ManageAnnouncements:
         self.page = page
         self.on_back = on_back
         self.all_announcements = []
-
-        
 
     def build(self):
         header = ft.Container(
@@ -35,9 +33,11 @@ class ManageAnnouncements:
         )
 
         self.search_field = ft.TextField(
-            hint_text="🔍 جستجو در اطلاعیه‌ها...",
+            hint_text="جستجو در اطلاعیه‌ها...",
+            prefix_icon=ft.icons.Icons.SEARCH,
             border_radius=10, bgcolor="#FFFFFF", text_size=14,
             on_change=self._on_search,
+            text_align=ft.TextAlign.RIGHT,
         )
 
         self.content_column = ft.Column(
@@ -88,7 +88,7 @@ class ManageAnnouncements:
                 alignment=ft.MainAxisAlignment.CENTER, spacing=10,
             ),
             ft.Container(height=15),
-            ft.Button("➕ ایجاد اطلاعیه جدید", width=250,
+            ft.Button("ایجاد اطلاعیه جدید", width=250,
                       style=ft.ButtonStyle(
                           bgcolor=AppTheme.PRIMARY, color="#FFFFFF", shape=ft.RoundedRectangleBorder(radius=12)),
                       on_click=self._show_create_form),
@@ -126,28 +126,40 @@ class ManageAnnouncements:
         type_labels = {"urgent": "فوری", "event": "مناسبت",
                        "financial": "مالی", "religious": "مذهبی", "general": "عمومی"}
         label = type_labels.get(ann_type, "عمومی")
-        status_text = "✅ منتشر شده" if is_published else "⏳ پیش‌نویس"
+        status_text = "منتشر شده ✅" if is_published else "پیش‌نویس ⏳"
         status_color = AppTheme.PRIMARY if is_published else AppTheme.WARNING
 
         return ft.Container(
             content=ft.Column([
-                ft.Row([ft.Text(title, size=15, font_family="Vazir", weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
-                        ft.Container(expand=True), ft.Text(status_text, size=11, font_family="Vazir", color=status_color)]),
+                ft.Row([
+                    ft.Text(title, size=15, font_family="Vazir", weight=ft.FontWeight.BOLD,
+                            color=AppTheme.TEXT_PRIMARY, text_align=ft.TextAlign.RIGHT, expand=True),
+                    ft.Text(status_text, size=11, font_family="Vazir", color=status_color,
+                            text_align=ft.TextAlign.LEFT),
+                ]),
                 ft.Container(height=6),
-                ft.Row([ft.Container(content=ft.Text(label, size=10, font_family="Vazir", color="#FFFFFF"), bgcolor=AppTheme.PRIMARY, border_radius=8, padding=ft.Padding(8, 3, 8, 3)),
-                        ft.Container(expand=True),
-                        ft.IconButton(icon=ft.icons.Icons.EDIT, icon_size=18, icon_color=AppTheme.PRIMARY,
-                                      on_click=lambda e, a=ann: self._show_edit_form(a)),
-                        ft.IconButton(icon=ft.icons.Icons.DELETE, icon_size=18, icon_color=AppTheme.ERROR, on_click=lambda e, a=ann: self._delete_announcement(a))]),
+                ft.Row([
+                    ft.Container(content=ft.Text(label, size=10, font_family="Vazir", color="#FFFFFF"),
+                                bgcolor=AppTheme.PRIMARY, border_radius=8, padding=ft.Padding(8, 3, 8, 3)),
+                    ft.Container(expand=True),
+                    ft.IconButton(icon=ft.icons.Icons.EDIT, icon_size=18, icon_color=AppTheme.PRIMARY,
+                                  on_click=lambda e, a=ann: self._show_edit_form(a)),
+                    ft.IconButton(icon=ft.icons.Icons.DELETE, icon_size=18, icon_color=AppTheme.ERROR,
+                                  on_click=lambda e, a=ann: self._delete_announcement(a))]),
             ]),
-            padding=14, bgcolor="#FFFFFF", border_radius=12, border=ft.Border(left=ft.BorderSide(4, AppTheme.SECONDARY)), margin=ft.Margin(0, 0, 0, 10),
+            padding=14, bgcolor="#FFFFFF", border_radius=12,
+            border=ft.Border(left=ft.BorderSide(4, AppTheme.SECONDARY)), margin=ft.Margin(0, 0, 0, 10),
         )
 
     def _show_create_form(self, e):
         title_field = ft.TextField(
-            label="عنوان", border_radius=10, bgcolor="#FFFFFF")
+            label="عنوان", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
+        )
         content_field = ft.TextField(
-            label="متن اطلاعیه", border_radius=10, bgcolor="#FFFFFF", max_lines=4, multiline=True)
+            label="متن اطلاعیه", border_radius=10, bgcolor="#FFFFFF", max_lines=4, multiline=True,
+            text_align=ft.TextAlign.RIGHT,
+        )
         type_dd = ft.Dropdown(label="نوع", value="general", options=[
             ft.dropdown.Option("general", "عمومی"),
             ft.dropdown.Option("urgent", "فوری"),
@@ -157,7 +169,6 @@ class ManageAnnouncements:
         ], border_radius=10, bgcolor="#FFFFFF")
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
-        # ایجاد محتوای اسکرول‌دار با ListView
         scrollable_content = ft.ListView(
             controls=[
                 title_field,
@@ -210,10 +221,14 @@ class ManageAnnouncements:
         self.page.show_dialog(dlg)
 
     def _show_edit_form(self, ann: dict):
-        title_field = ft.TextField(label="عنوان", value=ann.get(
-            "title", ""), border_radius=10, bgcolor="#FFFFFF")
-        content_field = ft.TextField(label="متن اطلاعیه", value=ann.get(
-            "content", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=4, multiline=True)
+        title_field = ft.TextField(
+            label="عنوان", value=ann.get("title", ""), border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
+        )
+        content_field = ft.TextField(
+            label="متن اطلاعیه", value=ann.get("content", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=4, multiline=True,
+            text_align=ft.TextAlign.RIGHT,
+        )
         type_dd = ft.Dropdown(label="نوع", value=ann.get("type", "general"), options=[
             ft.dropdown.Option("general", "عمومی"),
             ft.dropdown.Option("urgent", "فوری"),
@@ -223,7 +238,6 @@ class ManageAnnouncements:
         ], border_radius=10, bgcolor="#FFFFFF")
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
-        # ایجاد محتوای اسکرول‌دار با ListView
         scrollable_content = ft.ListView(
             controls=[
                 title_field,

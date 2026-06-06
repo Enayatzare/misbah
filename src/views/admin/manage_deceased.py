@@ -1,5 +1,6 @@
 # ==========================================
 # 📁 فایل: src/views/admin/manage_deceased.py
+# (نسخه اصلاح شده - RTL با text_align)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -12,8 +13,6 @@ class ManageDeceased:
         self.page = page
         self.on_back = on_back
         self.all_items = []
-
-        
 
     def build(self):
         header = ft.Container(
@@ -34,7 +33,11 @@ class ManageDeceased:
         )
 
         self.search_field = ft.TextField(
-            hint_text="🔍 جستجو...", border_radius=10, bgcolor="#FFFFFF", text_size=14, on_change=self._on_search)
+            hint_text="جستجو...",
+            prefix_icon=ft.icons.Icons.SEARCH,
+            border_radius=10, bgcolor="#FFFFFF", text_size=14, on_change=self._on_search,
+            text_align=ft.TextAlign.RIGHT,
+        )
         self.content_column = ft.Column([ft.Container(height=50), ft.ProgressBar(
             width=80, color=AppTheme.SECONDARY)], alignment=ft.MainAxisAlignment.CENTER)
         scrollable = ft.ListView(
@@ -63,10 +66,9 @@ class ManageDeceased:
             ft.Row([ft.Icon(ft.icons.Icons.FLAG, size=24, color=AppTheme.SECONDARY), ft.Text(
                 f"مدیریت آگهی ترحیم ({total_str} مورد)", size=24, font_family="IranNastaliq", color=AppTheme.SECONDARY)], alignment=ft.MainAxisAlignment.CENTER, spacing=10),
             ft.Container(height=15),
-            ft.Button("➕ افزودن آگهی جدید", width=250, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY,
+            ft.Button("افزودن آگهی جدید", width=250, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY,
                       color="#FFFFFF", shape=ft.RoundedRectangleBorder(radius=12)), on_click=lambda e: self._show_form()),
-            ft.Container(height=10), self.search_field, ft.Container(
-                height=15),
+            ft.Container(height=10), self.search_field, ft.Container(height=15),
         ]
         if items:
             for item in items:
@@ -89,35 +91,52 @@ class ManageDeceased:
         name = item.get("name", "")
         funeral_date = item.get("funeral_date", "")
         memorial_date = item.get("memorial_date", "")
-        card_content = [ft.Row([ft.Text(name, size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY), ft.Container(
-            expand=True), ft.Text("مرحوم", size=11, font_family="Vazir", color=AppTheme.TEXT_HINT)]), ft.Container(height=4)]
+        card_content = [
+            ft.Row([ft.Text(name, size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY,
+                            text_align=ft.TextAlign.RIGHT, expand=True),
+                    ft.Text("مرحوم", size=11, font_family="Vazir", color=AppTheme.TEXT_HINT)]),
+            ft.Container(height=4)
+        ]
         if funeral_date:
             card_content.append(ft.Text(
-                f"تشییع: {funeral_date}", size=11, font_family="Vazir", color=AppTheme.TEXT_HINT))
+                f"تشییع: {funeral_date}", size=11, font_family="Vazir", color=AppTheme.TEXT_HINT,
+                text_align=ft.TextAlign.RIGHT))
         if memorial_date:
             card_content.append(ft.Text(
-                f"ختم: {memorial_date}", size=11, font_family="Vazir", color=AppTheme.TEXT_HINT))
+                f"ختم: {memorial_date}", size=11, font_family="Vazir", color=AppTheme.TEXT_HINT,
+                text_align=ft.TextAlign.RIGHT))
         card_content.append(ft.Container(height=4))
-        card_content.append(ft.Row([ft.Container(expand=True), ft.IconButton(icon=ft.icons.Icons.EDIT, icon_size=16, icon_color=AppTheme.PRIMARY, on_click=lambda e, i=item: self._show_form(i)),
-                                    ft.IconButton(icon=ft.icons.Icons.DELETE, icon_size=16, icon_color=AppTheme.ERROR, on_click=lambda e, i=item: self._delete_item(i))]))
-        return ft.Container(content=ft.Column(card_content), padding=12, bgcolor="#FFFFFF", border_radius=12, border=ft.Border(left=ft.BorderSide(4, AppTheme.SECONDARY)), margin=ft.Margin(0, 0, 0, 8))
+        card_content.append(ft.Row([ft.Container(expand=True),
+                                    ft.IconButton(icon=ft.icons.Icons.EDIT, icon_size=16, icon_color=AppTheme.PRIMARY,
+                                                  on_click=lambda e, i=item: self._show_form(i)),
+                                    ft.IconButton(icon=ft.icons.Icons.DELETE, icon_size=16, icon_color=AppTheme.ERROR,
+                                                  on_click=lambda e, i=item: self._delete_item(i))]))
+        return ft.Container(content=ft.Column(card_content), padding=12, bgcolor="#FFFFFF", border_radius=12,
+                            border=ft.Border(left=ft.BorderSide(4, AppTheme.SECONDARY)), margin=ft.Margin(0, 0, 0, 8))
 
     def _show_form(self, item=None):
         is_edit = item is not None
         name_field = ft.TextField(label="نام متوفی", value=item.get(
-            "name", "") if item else "", border_radius=10, bgcolor="#FFFFFF")
+            "name", "") if item else "", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT)
         funeral_date_field = ft.TextField(label="زمان تشییع", hint_text="مثلاً: دوشنبه ۲۰ مهر، ساعت ۹ صبح", value=str(
-            item.get("funeral_date", "")) if item else "", border_radius=10, bgcolor="#FFFFFF")
+            item.get("funeral_date", "")) if item else "", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT)
         funeral_loc_field = ft.TextField(label="مکان تشییع", value=item.get(
-            "funeral_location", "") if item else "", border_radius=10, bgcolor="#FFFFFF")
+            "funeral_location", "") if item else "", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT)
         memorial_date_field = ft.TextField(label="زمان ختم", hint_text="مثلاً: دوشنبه ۲۰ مهر، ساعت ۱۶", value=str(
-            item.get("memorial_date", "")) if item else "", border_radius=10, bgcolor="#FFFFFF")
+            item.get("memorial_date", "")) if item else "", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT)
         memorial_loc_field = ft.TextField(label="مکان ختم", value=item.get(
-            "memorial_location", "") if item else "", border_radius=10, bgcolor="#FFFFFF")
+            "memorial_location", "") if item else "", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT)
         desc_field = ft.TextField(label="توضیحات", value=item.get(
-            "description", "") if item else "", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
+            "description", "") if item else "", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True,
+            text_align=ft.TextAlign.RIGHT)
         contact_field = ft.TextField(label="شماره تماس", value=item.get(
-            "contact_number", "") if item else "", border_radius=10, bgcolor="#FFFFFF")
+            "contact_number", "") if item else "", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT)
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
         def save(e):

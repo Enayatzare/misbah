@@ -1,6 +1,6 @@
 # ==========================================
 # 📁 فایل: src/views/admin/manage_donations.py
-# (نسخه نهایی - کارت صندوق مسجد، گزارش مشارکت‌کنندگان، تاریخچه و انتقال)
+# (نسخه نهایی - RTL با text_align، جداکننده هزارگان، صندوق مسجد)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -19,6 +19,22 @@ class ManageDonations:
         self.current_plan_page = 1
         self.per_page = 10
         self.current_tab = "donations"
+
+    def _format_amount(self, value: str) -> str:
+        """جداکننده هزارگان برای مبلغ"""
+        if not value:
+            return ""
+        clean = ''.join(c for c in value if c.isdigit())
+        if not clean:
+            return ""
+        return persian_numbers(f"{int(clean):,}")
+
+    def _on_amount_change(self, e, field):
+        """همزمان با تایپ، جداکننده اضافه می‌کند"""
+        formatted = self._format_amount(field.value)
+        if formatted != field.value:
+            field.value = formatted
+        self.page.update()
 
     def build(self):
         header = ft.Container(
@@ -490,7 +506,7 @@ class ManageDonations:
             else:
                 self._fund_tab_content.controls.append(
                     ft.Text("هنوز مبلغی به صندوق واریز نشده است",
-                            size=13, font_family="Vazir", color="#000060")
+                            size=13, font_family="Vazir", color="#FF2233")
                 )
 
         elif self._fund_tab == "history":
@@ -523,7 +539,7 @@ class ManageDonations:
             else:
                 self._fund_tab_content.controls.append(
                     ft.Text("هنوز مبلغی به صندوق واریز نشده است",
-                            size=13, font_family="Vazir", color="#FFFFFF60")
+                            size=13, font_family="Vazir", color="#FF2233")
                 )
 
         elif self._fund_tab == "transfer":
@@ -582,13 +598,15 @@ class ManageDonations:
                     keyboard_type=ft.KeyboardType.NUMBER,
                     border_radius=10,
                     bgcolor="#FFFFFF",
+                    text_align=ft.TextAlign.RIGHT,
+                    on_change=lambda e: self._on_amount_change(e, self._transfer_amount_field),
                 )
                 self._transfer_error = ft.Text(
                     "", color=AppTheme.ERROR, size=11)
 
                 def do_transfer(e):
                     plan_id_str = self._transfer_plan_dd.value
-                    amount_str = self._transfer_amount_field.value.strip(
+                    amount_str = self._transfer_amount_field.value.replace(",", "").strip(
                     ) if self._transfer_amount_field.value else ""
 
                     self._transfer_error.value = ""
@@ -644,12 +662,31 @@ class ManageDonations:
 
     def _show_plan_form(self, plan=None):
         is_edit = plan is not None
-        title_field = ft.TextField(label="عنوان طرح", value=plan.get(
-            "title", "") if plan else "", border_radius=10, bgcolor="#FFFFFF")
-        target_field = ft.TextField(label="مبلغ هدف (تومان)", value=str(int(float(plan.get("target_amount", 0)))) if plan and plan.get(
-            "target_amount") else "", border_radius=10, bgcolor="#FFFFFF", keyboard_type=ft.KeyboardType.NUMBER)
-        desc_field = ft.TextField(label="توضیحات", value=plan.get(
-            "description", "") if plan else "", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
+
+        if plan and plan.get("target_amount"):
+            raw_target = str(int(float(plan.get("target_amount", 0))))
+        else:
+            raw_target = ""
+
+        title_field = ft.TextField(
+            label="عنوان طرح",
+            value=plan.get("title", "") if plan else "",
+            border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
+        )
+        target_field = ft.TextField(
+            label="مبلغ هدف (تومان)",
+            value=self._format_amount(raw_target) if raw_target else "",
+            border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
+            on_change=lambda e: self._on_amount_change(e, target_field),
+        )
+        desc_field = ft.TextField(
+            label="توضیحات",
+            value=plan.get("description", "") if plan else "",
+            border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True,
+            text_align=ft.TextAlign.RIGHT,
+        )
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
         scrollable_content = ft.ListView(
@@ -672,10 +709,12 @@ class ManageDonations:
                 self.page.update()
                 return
 
+            target_amount = target_field.value.replace(",", "") if target_field.value else None
+
             data = {
                 "title": title_field.value,
                 "description": desc_field.value,
-                "target_amount": target_field.value if target_field.value else None
+                "target_amount": target_amount
             }
 
             if is_edit:

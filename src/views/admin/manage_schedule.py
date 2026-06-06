@@ -1,6 +1,6 @@
 # ==========================================
 # فایل: src/views/admin/manage_schedule.py
-# (نسخه اصلاح شده - دیالوگ‌های اسکرول‌دار)
+# (نسخه اصلاح شده - RTL با text_align)
 # ==========================================
 import flet as ft
 from src.theme import AppTheme
@@ -21,8 +21,6 @@ class ManageSchedule:
         self.on_back = on_back
         self.all_items = []
 
-        
-
     def build(self):
         header = ft.Container(
             content=ft.Row(
@@ -41,7 +39,11 @@ class ManageSchedule:
         )
 
         self.search_field = ft.TextField(
-            hint_text="🔍 جستجو...", border_radius=10, bgcolor="#FFFFFF", text_size=14, on_change=self._on_search)
+            hint_text="جستجو...",
+            prefix_icon=ft.icons.Icons.SEARCH,
+            border_radius=10, bgcolor="#FFFFFF", text_size=14, on_change=self._on_search,
+            text_align=ft.TextAlign.RIGHT,
+        )
         self.content_column = ft.Column([ft.Container(height=50), ft.ProgressBar(
             width=80, color=AppTheme.SECONDARY)], alignment=ft.MainAxisAlignment.CENTER)
         scrollable = ft.ListView(
@@ -71,10 +73,9 @@ class ManageSchedule:
                     ft.Text(f"مدیریت برنامه هفتگی ({total_str} مورد)", size=26, font_family="IranNastaliq", color=AppTheme.SECONDARY)],
                    alignment=ft.MainAxisAlignment.CENTER, spacing=10),
             ft.Container(height=15),
-            ft.Button("➕ افزودن برنامه جدید", width=250, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF", shape=ft.RoundedRectangleBorder(radius=12)),
+            ft.Button("افزودن برنامه جدید", width=250, style=ft.ButtonStyle(bgcolor=AppTheme.PRIMARY, color="#FFFFFF", shape=ft.RoundedRectangleBorder(radius=12)),
                       on_click=self._show_create_form),
-            ft.Container(height=10), self.search_field, ft.Container(
-                height=15),
+            ft.Container(height=10), self.search_field, ft.Container(height=15),
         ]
         if items:
             for item in items:
@@ -101,11 +102,13 @@ class ManageSchedule:
         day_name = dict(DAYS_OF_WEEK).get(day, day)
         return ft.Container(
             content=ft.Column([
-                ft.Row([ft.Text(day_name, size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color=AppTheme.SECONDARY),
-                        ft.Container(expand=True),
-                        ft.Text(f"{persian_numbers(time_end)} - {persian_numbers(time_start)}" if time_start else "", size=12, font_family="Vazir", color=AppTheme.TEXT_HINT)]),
-                ft.Text(title, size=15, font_family="Vazir",
-                        weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
+                ft.Row([
+                    ft.Text(day_name, size=14, font_family="Vazir", weight=ft.FontWeight.BOLD, color=AppTheme.SECONDARY),
+                    ft.Container(expand=True),
+                    ft.Text(f"{persian_numbers(time_end)} - {persian_numbers(time_start)}" if time_start else "", size=12, font_family="Vazir", color=AppTheme.TEXT_HINT),
+                ]),
+                ft.Text(title, size=15, font_family="Vazir", weight=ft.FontWeight.BOLD,
+                        color=AppTheme.TEXT_PRIMARY, text_align=ft.TextAlign.RIGHT),
                 ft.Container(height=6),
                 ft.Row([ft.Container(expand=True),
                         ft.IconButton(icon=ft.icons.Icons.EDIT, icon_size=18, icon_color=AppTheme.PRIMARY,
@@ -117,20 +120,29 @@ class ManageSchedule:
 
     def _show_create_form(self, e):
         title_field = ft.TextField(
-            label="عنوان برنامه", border_radius=10, bgcolor="#FFFFFF")
+            label="عنوان برنامه", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
+        )
         day_dd = ft.Dropdown(label="روز", value="saturday", options=[ft.dropdown.Option(
             d[0], d[1]) for d in DAYS_OF_WEEK], border_radius=10, bgcolor="#FFFFFF")
         time_start_field = ft.TextField(
-            label="ساعت شروع", border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 09:00")
+            label="ساعت شروع", border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 09:00",
+            text_align=ft.TextAlign.RIGHT,
+        )
         time_end_field = ft.TextField(
-            label="ساعت پایان", border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 11:00")
+            label="ساعت پایان", border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 11:00",
+            text_align=ft.TextAlign.RIGHT,
+        )
         lecturer_field = ft.TextField(
-            label="سخنران/ مداح", border_radius=10, bgcolor="#FFFFFF")
+            label="سخنران/ مداح", border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
+        )
         desc_field = ft.TextField(
-            label="توضیحات", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
+            label="توضیحات", border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True,
+            text_align=ft.TextAlign.RIGHT,
+        )
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
-        # ایجاد محتوای اسکرول‌دار با ListView
         scrollable_content = ft.ListView(
             controls=[
                 title_field,
@@ -193,21 +205,30 @@ class ManageSchedule:
         self.page.show_dialog(dlg)
 
     def _show_edit_form(self, item: dict):
-        title_field = ft.TextField(label="عنوان", value=item.get(
-            "title", ""), border_radius=10, bgcolor="#FFFFFF")
+        title_field = ft.TextField(
+            label="عنوان", value=item.get("title", ""), border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
+        )
         day_dd = ft.Dropdown(label="روز", value=item.get("day", "saturday"), options=[
                              ft.dropdown.Option(d[0], d[1]) for d in DAYS_OF_WEEK], border_radius=10, bgcolor="#FFFFFF")
-        time_start_field = ft.TextField(label="ساعت شروع", value=item.get(
-            "time_start", "")[:5], border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 09:00")
-        time_end_field = ft.TextField(label="ساعت پایان", value=item.get(
-            "time_end", "")[:5], border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 11:00")
-        lecturer_field = ft.TextField(label="سخنران/ مداح", value=item.get(
-            "lecturer", ""), border_radius=10, bgcolor="#FFFFFF")
-        desc_field = ft.TextField(label="توضیحات", value=item.get(
-            "description", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True)
+        time_start_field = ft.TextField(
+            label="ساعت شروع", value=item.get("time_start", "")[:5], border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 09:00",
+            text_align=ft.TextAlign.RIGHT,
+        )
+        time_end_field = ft.TextField(
+            label="ساعت پایان", value=item.get("time_end", "")[:5], border_radius=10, bgcolor="#FFFFFF", hint_text="مثال: 11:00",
+            text_align=ft.TextAlign.RIGHT,
+        )
+        lecturer_field = ft.TextField(
+            label="سخنران/ مداح", value=item.get("lecturer", ""), border_radius=10, bgcolor="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
+        )
+        desc_field = ft.TextField(
+            label="توضیحات", value=item.get("description", ""), border_radius=10, bgcolor="#FFFFFF", max_lines=3, multiline=True,
+            text_align=ft.TextAlign.RIGHT,
+        )
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
-        # ایجاد محتوای اسکرول‌دار با ListView
         scrollable_content = ft.ListView(
             controls=[
                 title_field,

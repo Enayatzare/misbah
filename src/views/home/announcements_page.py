@@ -11,8 +11,6 @@ class AnnouncementsPage:
         self.page = page
         self.on_back = on_back
 
-        
-
     def build(self):
         header = ft.Container(
             content=ft.Row(
@@ -79,8 +77,6 @@ class AnnouncementsPage:
                 ft.Container(height=5),
                 ft.Text("آخرین اطلاعیه‌های مسجد", size=14, font_family="Vazir",
                         color="#FFFFFF80", text_align=ft.TextAlign.CENTER),
-
-
                 ft.Container(height=25),
             ]
 
@@ -146,16 +142,14 @@ class AnnouncementsPage:
                 jd = jdatetime.date.fromgregorian(date=dt.date())
                 months = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد",
                           "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"]
-                shamsi_date = f"{persian_numbers(jd.day)} {months[jd.month - 1]} {persian_numbers(jd.year)}"
+                shamsi_date = f"{persian_numbers(str(jd.day))} {months[jd.month - 1]} {persian_numbers(str(jd.year))}"
             except:
                 shamsi_date = str(publish_date)[:10]
 
         short_content = content[:80] + "..." if len(content) > 80 else content
 
-        # ستون محتوا
-        content_col = ft.Column([], expand=True)
+        content_col = ft.Column([], expand=True, horizontal_alignment=ft.CrossAxisAlignment.END)
 
-        # ردیف عنوان
         title_row = ft.Row(
             [
                 ft.Container(
@@ -166,22 +160,21 @@ class AnnouncementsPage:
                 ),
                 ft.Container(width=12),
                 ft.Text(title, size=16, font_family="Vazir",
-                        weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
+                        weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY,
+                        text_align=ft.TextAlign.RIGHT, expand=True),
             ],
         )
         content_col.controls.append(title_row)
 
-        # خلاصه محتوا
         content_col.controls.append(ft.Container(height=4))
         content_col.controls.append(ft.Text(
-            short_content, size=12, font_family="Vazir", color=AppTheme.TEXT_SECONDARY))
+            short_content, size=12, font_family="Vazir", color=AppTheme.TEXT_SECONDARY,
+            text_align=ft.TextAlign.RIGHT, expand=True))
 
-        # دیوایدر
         content_col.controls.append(ft.Container(height=12))
         content_col.controls.append(ft.Divider(height=1, color="#F0F0F0"))
         content_col.controls.append(ft.Container(height=8))
 
-        # برچسب و تاریخ
         tag_row = ft.Row(
             [
                 ft.Container(
@@ -200,14 +193,14 @@ class AnnouncementsPage:
         )
         content_col.controls.append(tag_row)
 
-        # نام ثبت‌کننده
         if created_by:
             content_col.controls.append(ft.Container(height=8))
             content_col.controls.append(ft.Divider(height=1, color="#F0F0F0"))
             content_col.controls.append(ft.Container(height=4))
             content_col.controls.append(
                 ft.Text(f"ثبت توسط: {created_by}", size=11,
-                        font_family="Vazir", color=AppTheme.TEXT_HINT)
+                        font_family="Vazir", color=AppTheme.TEXT_HINT,
+                        text_align=ft.TextAlign.RIGHT)
             )
 
         return ft.Container(
@@ -236,14 +229,14 @@ class AnnouncementsPage:
 
         dlg = ft.AlertDialog(
             title=ft.Text(title, font_family="Vazir", weight=ft.FontWeight.BOLD,
-                          text_align=ft.TextAlign.CENTER, color=color),
+                          text_align=ft.TextAlign.RIGHT, color=color),
             content=ft.Column(
                 [
                     ft.Text(f"{label}  |  {shamsi_date}", size=12, font_family="Vazir",
-                            color=AppTheme.TEXT_HINT, text_align=ft.TextAlign.CENTER),
+                            color=AppTheme.TEXT_HINT, text_align=ft.TextAlign.RIGHT),
                     ft.Divider(height=20, color="#E0E0E0"),
                     ft.Text(content, size=14, font_family="Vazir",
-                            color=AppTheme.TEXT_PRIMARY),
+                            color=AppTheme.TEXT_PRIMARY, text_align=ft.TextAlign.RIGHT, expand=True),
                 ],
                 spacing=10,
                 width=300,

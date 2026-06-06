@@ -13,8 +13,8 @@ GOLD_GLOW = "#D4AF3720"
 BG_DARK = "#1A2F1E"
 
 CUSTOM_DHIKRS = [
-    "لا حول و لا قوه الا بالله",
-    "استغفرالله ربی و اتوب الیه",
+    "لَا حَوْلَ وَ لَا قُوَّةَ إِلَّا بِاللَّهِ الْعَلِیِّ الْعَظِیمِ",
+    "استغفرالله رَبیِ و اَتـُوبُ الیه",
     "اللَّهُمَّ اجْعَلْنِی فِی دِرْعِکَ الْحَصِینَةِ الَّتِی تَجْعَلُ فِیهَا مَنْ تَشاء",
     "اللَّهُمَّ , لَکَ الْحَمْدُ وَإِلَیْکَ الْمُشْتَکَی , وَأَنْتَ الْمُسْتَعَانُ",
     "لآ اِلهَ اِلآ اَنتَ سُبحانَکَ اِنّی کُنتُ مِنَ الظالِمینَ",
@@ -370,6 +370,7 @@ class TasbihPage:
             bgcolor=BG_DARK,
             border_radius=10,
             color="#FFFFFF",
+            text_align=ft.TextAlign.RIGHT,
         )
         msg = ft.Text("", color=AppTheme.ERROR, size=12)
 
@@ -398,6 +399,7 @@ class TasbihPage:
                     size=11,
                     font_family="Vazir",
                     color="#FFFFFF60",
+                    text_align=ft.TextAlign.RIGHT,
                 )
             )
             dlg_content.append(ft.Container(height=5))
@@ -410,7 +412,8 @@ class TasbihPage:
                 bgcolor=BG_DARK,
                 border_radius=10,
                 color="#FFFFFF",
-                hint_style=ft.TextStyle(size=11, font_family="Vazir", color="#FFFFFF40"),
+                hint_style=ft.TextStyle(size=11, font_family="Vazir", color="#FFFFFF"),
+                text_align=ft.TextAlign.RIGHT,
             )
             dlg_content.append(custom_field)
 
@@ -418,7 +421,7 @@ class TasbihPage:
 
         def save(e):
             try:
-                new_target = int(target_field.value)
+                new_target = int(target_field.value.replace(",", ""))
                 if new_target > 0:
                     self.target = new_target
                     if self.dhikr_type == "custom":
@@ -443,7 +446,6 @@ class TasbihPage:
 
         dlg = ft.AlertDialog(
             bgcolor="#0D1B0F",
-            inset_padding=ft.Padding(0, 0, 0, 120),
             title=ft.Text(
                 "تنظیمات ذکر" if self.dhikr_type == "custom" else "تنظیم هدف",
                 font_family="Vazir",

@@ -169,9 +169,10 @@ class Dashboard:
             [
                 header,
                 ft.Container(
-                    content=ft.Text("دسترسی سریع", size=16, font_family="Vazir",
-                                    weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY),
-                    padding=ft.Padding(20, 20, 0, 0)
+                    content=ft.Text("دسترسی سریع", size=18, font_family="Vazir",
+                                    weight=ft.FontWeight.BOLD, color=AppTheme.TEXT_PRIMARY,text_align=ft.TextAlign.RIGHT),
+                    padding=ft.Padding(20, 20, 20, 0),
+                    alignment=ft.Alignment(0, 0),
                 ),
                 cards,
                 ft.Container(height=80),
