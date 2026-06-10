@@ -10,8 +10,6 @@ class AdminPanel:
         self.on_back = on_back
         self.user = user
 
-        
-
     def build(self):
         header = ft.Container(
             content=ft.Row(
@@ -33,6 +31,7 @@ class AdminPanel:
         self.stats_row = ft.Row(
             spacing=10, alignment=ft.MainAxisAlignment.CENTER, wrap=True)
 
+        # کارت‌های اصلی (همه adminها می‌بینند)
         menu_items = ft.GridView(
             expand=True,
             runs_count=2,
@@ -50,10 +49,15 @@ class AdminPanel:
                     "مشارکت‌های مردمی", ft.icons.Icons.HANDSHAKE, "#EF6C00", self.manage_donations),
                 self._build_menu_card(
                     "آگهی ترحیم", ft.icons.Icons.FLAG, "#616161", self.manage_deceased),
-                self._build_menu_card(
-                    "کاربران", ft.icons.Icons.PEOPLE, "#7B1FA2", self.manage_users),
             ],
         )
+
+        # کارت "کاربران" فقط برای super_admin
+        if self.user.get("role") == "super_admin":
+            menu_items.controls.append(
+                self._build_menu_card(
+                    "کاربران", ft.icons.Icons.PEOPLE, "#7B1FA2", self.manage_users)
+            )
 
         page_content = ft.Container(
             content=ft.ListView(
@@ -99,7 +103,6 @@ class AdminPanel:
     def load_stats(self):
         stats = api.get("admin/dashboard/get_stats.php")
 
-        # همچنین تعداد آگهی‌های ترحیم را به طور جداگانه دریافت می‌کنیم
         deceased_result = api.get("social/get_deceased.php")
         total_deceased = len(deceased_result) if isinstance(
             deceased_result, list) else 0
@@ -114,7 +117,6 @@ class AdminPanel:
                     str(stats.get("total_events", 0)))),
                 self._build_stat_card("در انتظار", ft.icons.Icons.HANDSHAKE, "#EF6C00", persian_numbers(
                     str(stats.get("pending_donations", 0)))),
-                # ✅ کارت جدید برای آگهی ترحیم
                 self._build_stat_card("آگهی ترحیم", ft.icons.Icons.FLAG, "#616161", persian_numbers(
                     str(total_deceased))),
             ]
